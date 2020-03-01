@@ -1,7 +1,7 @@
 #!/bin/sh
 
 itShouldCheckThatAllInstalledSoftwareExists() {
-    doesCommandExist php-fpm=
+    doesCommandExist php-fpm
 }
 
 doesCommandExist() {
