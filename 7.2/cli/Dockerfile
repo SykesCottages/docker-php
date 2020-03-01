@@ -14,12 +14,11 @@ RUN apt-get update; \
         php7.2-xml \
         php7.2-zip
 
-# Composer
 COPY ./install-composer.php install-composer.php
 RUN php install-composer.php
-
 RUN php composer-setup.php
 RUN rm composer-setup.php
 RUN mv composer.phar /usr/bin/composer
 
-ENTRYPOINT ["php"]
+COPY entrypoint /usr/local/bin/
+ENTRYPOINT [ "entrypoint" ]
