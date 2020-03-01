@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PHP_VERSION=7.2
+PHP_VERSION=7.0
 
 itShouldCheckThatAllInstalledSoftwareExists() {
     doesCommandExist php
