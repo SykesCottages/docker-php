@@ -19,11 +19,11 @@ RUN apt-get update; \
 RUN apt-get autoremove; \
     apt-get clean -yy
 
-COPY ./install-composer.php install-composer.php
-RUN php install-composer.php
-RUN php composer-setup.php
-RUN rm composer-setup.php
-RUN mv composer.phar /usr/bin/composer
+RUN curl -L https://getcomposer.org/installer > /tmp/composer-setup.php; \
+    echo "e0012edf3e80b6978849f5eff0d4b4e4c79ff1609dd1e613307e16318854d24ae64f26d17af3ef0bf7cfb710ca74755a /tmp/composer-setup.php" | sha384sum --check; \
+    php /tmp/composer-setup.php; \
+    rm /tmp/composer-setup.php; \
+    mv composer.phar /usr/bin/composer
 
 COPY entrypoint /usr/local/bin/
 ENTRYPOINT [ "entrypoint" ]
