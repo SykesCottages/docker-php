@@ -1,4 +1,4 @@
-# Sykes Cottages Base Docker Image
+# Sykes Cottages PHP Docker Images
 
 ## About
 
