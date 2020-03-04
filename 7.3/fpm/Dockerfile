@@ -1,8 +1,12 @@
 FROM sykescottages/php:7.3-cli
 
-RUN apt-get update; \
-    apt-get install -yy \
+RUN apt-get update && \
+    apt-get install -y -q \
         php7.3-fpm
+
+RUN apt-get autoremove -y -q && \
+    apt-get autoclean -y -q && \
+    rm -rf /var/lib/apt/lists/*
 
 RUN ln -s /usr/sbin/php-fpm7.3 /usr/bin/php-fpm
 RUN mkdir -p /run/php

@@ -1,8 +1,12 @@
 FROM sykescottages/php:7.4-cli
 
-RUN apt-get update; \
-    apt-get install -yy \
+RUN apt-get update && \
+    apt-get install -y -q \
         php7.4-fpm
+
+RUN apt-get autoremove -y -q && \
+    apt-get autoclean -y -q && \
+    rm -rf /var/lib/apt/lists/*
 
 RUN ln -s /usr/sbin/php-fpm7.4 /usr/bin/php-fpm
 RUN mkdir -p /run/php
