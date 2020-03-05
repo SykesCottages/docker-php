@@ -23,6 +23,3 @@ RUN curl -L https://getcomposer.org/installer > /tmp/composer-setup.php && \
     php /tmp/composer-setup.php && \
     rm /tmp/composer-setup.php && \
     mv composer.phar /usr/bin/composer
-
-COPY entrypoint /usr/local/bin/
-ENTRYPOINT [ "entrypoint" ]

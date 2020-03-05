@@ -21,6 +21,3 @@ RUN apt-get autoremove -y -q && \
 RUN php /composer/composer-setup.php && \
     rm /composer/composer-setup.php && \
     mv composer.phar /usr/bin/composer
-
-COPY entrypoint /usr/local/bin/
-ENTRYPOINT [ "entrypoint" ]
