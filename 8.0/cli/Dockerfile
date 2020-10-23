@@ -2,17 +2,16 @@ FROM sykescottages/php:base
 
 RUN apt-get update; \
     apt-get install -y -q \
-        php7.4 \
-        php7.4-bcmath \
-        php7.4-curl \
-        php7.4-dev \
-        php7.4-intl \
-        php7.4-json \
-        php7.4-mbstring \
-        php7.4-mysql \
-        php7.4-soap \
-        php7.4-xml \
-        php7.4-zip
+        php8.0 \
+        php8.0-bcmath \
+        php8.0-curl \
+        php8.0-dev \
+        php8.0-intl \
+        php8.0-mbstring \
+        php8.0-mysql \
+        php8.0-soap \
+        php8.0-xml \
+        php8.0-zip
 
 RUN apt-get autoremove -y -q && \
     apt-get autoclean -y -q && \
