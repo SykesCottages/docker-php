@@ -6,9 +6,10 @@ RUN add-apt-repository ppa:ondrej/php
 
 RUN mkdir /composer
 
-RUN curl -L https://getcomposer.org/download/1.10.15/composer.phar > /composer/composer-setup.php && \
-    echo "67aeceddcb38018de9b3cb9cda4ebb20d0b4167ca106a0a2f83a49c40b4d800a6004eb6e790f638ef689d734488d25cf /composer/composer-setup.php" | sha384sum --check;
+RUN curl -L https://getcomposer.org/installer > /composer/composer-setup.php && \
+    echo "756890a4488ce9024fc62c56153228907f1545c228516cbf63f885e036d37e9a59d27d63f46af1d4d07ee0f76181c7d3 /composer/composer-setup.php" | sha384sum --check;
 
-COPY entrypoint /usr/local/bin/
+COPY entrypoint-cli /usr/local/bin/
+COPY entrypoint-fpm /usr/local/bin/
 
-ENTRYPOINT [ "entrypoint" ]
+ENTRYPOINT [ "entrypoint-cli" ]

@@ -18,6 +18,4 @@ RUN apt-get autoremove -y -q && \
     apt-get autoclean -y -q && \
     rm -rf /var/lib/apt/lists/*
 
-RUN php /composer/composer-setup.php && \
-    rm /composer/composer-setup.php && \
-    mv composer.phar /usr/bin/composer
+ENTRYPOINT [ "entrypoint-cli" ]

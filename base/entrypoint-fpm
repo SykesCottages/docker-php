@@ -1,0 +1,22 @@
+#!/bin/sh
+set -e
+
+# Default to composer version 1.10.15 if none specified for legacy support
+if [ -z "$COMPOSER_VERSION" ]; then
+  COMPOSER_VERSION=1.10.15
+fi
+
+# Check to see if composer is installed and if not then install it
+if [ ! -f "/usr/bin/composer" ]; then
+  php /composer/composer-setup.php \
+    --install-dir=bin \
+    --filename=composer \
+    --version=$COMPOSER_VERSION
+fi
+
+# first arg is `-f` or `--some-option`
+if [ "${1#-}" != "$1" ]; then
+	set -- php-fpm "$@"
+fi
+
+exec "$@"
