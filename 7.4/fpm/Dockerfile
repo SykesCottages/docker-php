@@ -17,8 +17,7 @@ RUN sed -i 's/;clear_env = no/clear_env = no/g' /etc/php/7.4/fpm/pool.d/www.conf
 RUN sed -i 's|\(error_log =\).*|\1 /proc/self/fd/2|g' /etc/php/7.4/fpm/php-fpm.conf
 RUN sed -i 's|;access.log =.*|access.log = /proc/self/fd/2|g' /etc/php/7.4/fpm/pool.d/www.conf
 
-COPY entrypoint /usr/local/bin/
-ENTRYPOINT [ "entrypoint" ]
+ENTRYPOINT [ "entrypoint-fpm" ]
 
 EXPOSE 9000
 CMD ["php-fpm", "-F"]
