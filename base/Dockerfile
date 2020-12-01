@@ -12,5 +12,3 @@ RUN curl -L https://getcomposer.org/installer > /composer/composer-setup.php && 
 COPY composer-check /usr/local/bin/
 COPY entrypoint-cli /usr/local/bin/
 COPY entrypoint-fpm /usr/local/bin/
-
-ENTRYPOINT [ "entrypoint-cli" ]
