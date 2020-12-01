@@ -17,5 +17,3 @@ RUN apt-get update && \
 RUN apt-get autoremove -y -q && \
     apt-get autoclean -y -q && \
     rm -rf /var/lib/apt/lists/*
-
-ENTRYPOINT [ "entrypoint-cli" ]
