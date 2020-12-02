@@ -3,14 +3,23 @@ set -e
 
 # Default to composer version 1.10.15 if none specified for legacy support
 if [ -z "$COMPOSER_VERSION" ]; then
-  COMPOSER_VERSION=1.10.15
+  COMPOSER_VERSION="1.10.15"
+fi
+
+# Default to composer version 1.10.15 if none specified for legacy support
+if [ -z "$COMPOSER_PATH" ]; then
+  COMPOSER_PATH="/usr/local/bin"
+fi
+
+# Default to composer version 1.10.15 if none specified for legacy support
+if [ -z "$COMPOSER_NAME" ]; then
+  COMPOSER_NAME="composer"
 fi
 
 # Check to see if composer is installed and if not then install it
 if [ ! -f "/usr/bin/composer" ]; then
   php /composer/composer-setup.php \
-    --install-dir=bin \
-    --filename=composer \
+    --install-$COMPOSER_PATH \
+    --filename=$COMPOSER_NAME \
     --version=$COMPOSER_VERSION
 fi
-
