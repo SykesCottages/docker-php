@@ -19,7 +19,7 @@ fi
 # Check to see if composer is installed and if not then install it
 if [ ! -f "/usr/bin/composer" ]; then
   php /composer/composer-setup.php \
-    --install-$COMPOSER_PATH \
+    --install-dir=$COMPOSER_PATH \
     --filename=$COMPOSER_NAME \
     --version=$COMPOSER_VERSION
 fi
