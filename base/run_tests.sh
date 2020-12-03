@@ -1,7 +1,6 @@
 #!/bin/sh
 
 itShouldCheckThatAllFilesExists() {
-    doesFileExist /composer/composer-setup.php
     doesFileExist /etc/localtime
     doesFileExist /usr/local/bin/entrypoint-cli
     doesFileExist /usr/local/bin/entrypoint-fpm

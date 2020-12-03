@@ -28,23 +28,13 @@ FROM sykescottages/php:version
 
 ## Composer
 
-All images come with composer installed, but by default they all use version `1.10.15` which stops legacy composer builds from failing. 
-The configuration of composer is defined by environment variable `COMPOSER_VERSION` and can either be set in the docker command, a docker environment file or in a `docker-compose.yml` file.
+All images come with composer installed, but by default they all use version 1 which stops legacy composer builds from failing. 
+To replace composer or use a specific version of composer you will need to extend this image and create a multi-stage build Dockerfile e.g. 
 
-Command:
-```shell script
-docker -i -t -e COMPOSER_VERSION:2.0.7 sykescottages/php:8.0-cli
+```dockerfile
+FROM sykescottages/php:7.4-cli
+COPY --from=composer /usr/bin/composer /usr/bin/composer
 ```
-
-docker-compose.yml:
-```yaml
-services:
-    php:
-        image: sykescottages/php:8.0-cli
-        environment:
-            COMPOSER_VERSION: "2.0.7"
-```
-
 
 ## Supported versions and available tags
 - php5.6-cli - `sykescottages/php:5.6-cli`
