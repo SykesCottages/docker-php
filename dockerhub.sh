@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Validate the container passes our tests
-#./test.sh
+./test.sh
 
 # You need to provide your own creds because #security
 docker login
