@@ -10,8 +10,8 @@ VERSIONS=( "5.6" "7.0" "7.1" "7.2" "7.3" "7.4" "8.0" )
 for VERSION in "${VERSIONS[@]}"
 do
   docker build --no-cache -t sykescottages/php:${VERSION}-fpm $VERSION/fpm
-  docker push sykescottages/base:${VERSION}-fpm
+  docker push sykescottages/php:${VERSION}-fpm
 
   docker build --no-cache -t sykescottages/php:${VERSION}-cli $VERSION/cli
-  docker push sykescottages/base:${VERSION}-cli
+  docker push sykescottages/php:${VERSION}-cli
 done
