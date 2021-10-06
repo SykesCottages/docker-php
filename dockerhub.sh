@@ -6,6 +6,9 @@
 # You need to provide your own creds because #security
 docker login
 
+docker build --no-cache -t sykescottages/php:base base
+docker push sykescottages/php:base
+
 VERSIONS=( "5.6" "7.0" "7.1" "7.2" "7.3" "7.4" "8.0" )
 for VERSION in "${VERSIONS[@]}"
 do
