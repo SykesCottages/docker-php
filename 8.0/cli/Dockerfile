@@ -13,6 +13,8 @@ RUN apt-get update; \
         php8.0-xml \
         php8.0-zip
 
+RUN update-alternatives --set php /usr/bin/php8.0
+
 RUN apt-get autoremove -y -q && \
     apt-get autoclean -y -q && \
     rm -rf /var/lib/apt/lists/*

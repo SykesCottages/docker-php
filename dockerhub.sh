@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Validate the container passes our tests
-./test.sh
-
 # You need to provide your own creds because #security
 docker login
 
@@ -17,4 +14,9 @@ do
 
   docker build --no-cache -t sykescottages/php:${VERSION}-fpm $VERSION/fpm
   docker push sykescottages/php:${VERSION}-fpm
+
+  docker rmi sykescottages/php:${VERSION}-cli
+  docker rmi sykescottages/php:${VERSION}-fpm
 done
+
+docker rmi sykescottages/php:base
