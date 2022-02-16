@@ -19,4 +19,7 @@ RUN apt-get autoremove -y -q && \
     apt-get autoclean -y -q && \
     rm -rf /var/lib/apt/lists/*
 
+# Enable Error Logs
+RUN echo "error_log = /dev/stderr" >> /etc/php/8.0/cli/php.ini
+
 ENTRYPOINT [ "entrypoint-cli" ]
