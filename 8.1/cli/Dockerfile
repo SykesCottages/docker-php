@@ -1,5 +1,7 @@
 FROM sykescottages/php:base
 
+COPY --from=composer /usr/bin/composer /usr/bin/composer
+
 RUN apt-get update; \
     apt-get install -y -q \
         php8.1 \
