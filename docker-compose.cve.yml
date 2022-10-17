@@ -129,3 +129,18 @@ services:
     volumes:
       - ./cve-reports:/cve-reports
       - ./scripts/parse-cve.sh:/security/parse-cve.sh
+
+  php-8.2-cli:
+    build: 8.2/cli
+    command: 8.2-cli
+    entrypoint: /security/parse-cve.sh
+    volumes:
+      - ./cve-reports:/cve-reports
+      - ./scripts/parse-cve.sh:/security/parse-cve.sh
+  php-8.2-fpm:
+    build: 8.2/fpm
+    command: 8.2-fpm
+    entrypoint: /security/parse-cve.sh
+    volumes:
+      - ./cve-reports:/cve-reports
+      - ./scripts/parse-cve.sh:/security/parse-cve.sh

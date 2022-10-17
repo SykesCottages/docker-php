@@ -53,6 +53,8 @@ COPY --from=composer /usr/bin/composer /usr/bin/composer
 - php8.0-fpm - `sykescottages/php:8.0-fpm`
 - php8.1-cli - `sykescottages/php:8.1-cli`
 - php8.1-fpm - `sykescottages/php:8.1-fpm`
+- php8.2-cli - `sykescottages/php:8.2-cli`
+- php8.2-fpm - `sykescottages/php:8.2-fpm`
 
 
 ## Testing
