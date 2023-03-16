@@ -3,7 +3,7 @@ version: "2"
 services:
 
   php-base:
-    build: base
+    build: 8-base
     command: base
     entrypoint: /security/parse-cve.sh
     volumes:

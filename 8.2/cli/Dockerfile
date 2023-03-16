@@ -1,6 +1,4 @@
-FROM sykescottages/php:base
-
-COPY --from=composer /usr/bin/composer /usr/bin/composer
+FROM sykescottages/php:8-base
 
 RUN apt-get update; \
     apt-get install -y -q \

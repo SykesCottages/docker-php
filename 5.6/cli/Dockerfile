@@ -1,13 +1,4 @@
-FROM sykescottages/base:1.2.1
-
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime
-
-RUN add-apt-repository ppa:ondrej/php
-
-COPY entrypoint-cli /usr/local/bin/
-COPY entrypoint-fpm /usr/local/bin/
-
-COPY --from=composer:1 /usr/bin/composer /usr/bin/composer
+FROM sykescottages/php:5-base
 
 RUN apt-get update && \
     apt-get install -y -q \
