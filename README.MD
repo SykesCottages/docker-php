@@ -37,25 +37,24 @@ COPY --from=composer /usr/bin/composer /usr/bin/composer
 ```
 
 ## Supported versions and available tags
-- php5.6-cli - `sykescottages/php:5.6-cli`
-- php5.6-fpm - `sykescottages/php:5.6-fpm`
-- php7.0-cli - `sykescottages/php:7.0-cli`
-- php7.0-fpm - `sykescottages/php:7.0-fpm`
-- php7.1-cli - `sykescottages/php:7.1-cli`
-- php7.1-fpm - `sykescottages/php:7.1-fpm`
-- php7.2-cli - `sykescottages/php:7.2-cli`
-- php7.2-fpm - `sykescottages/php:7.2-fpm`
-- php7.3-cli - `sykescottages/php:7.3-cli`
-- php7.3-fpm - `sykescottages/php:7.3-fpm`
-- php7.4-cli - `sykescottages/php:7.4-cli`
-- php7.4-fpm - `sykescottages/php:7.4-fpm`
-- php8.0-cli - `sykescottages/php:8.0-cli`
-- php8.0-fpm - `sykescottages/php:8.0-fpm`
-- php8.1-cli - `sykescottages/php:8.1-cli`
-- php8.1-fpm - `sykescottages/php:8.1-fpm`
-- php8.2-cli - `sykescottages/php:8.2-cli`
-- php8.2-fpm - `sykescottages/php:8.2-fpm`
-
+- 5.6.40 cli (Deprecated) - `sykescottages/php:5.6-cli`
+- 5.6.40 fpm (Deprecated) - `sykescottages/php:5.6-fpm`
+- 7.0.33 cli (Deprecated) - `sykescottages/php:7.0-cli`
+- 7.0.33 fpm (Deprecated) - `sykescottages/php:7.0-fpm`
+- 7.1.33 cli (Deprecated) - `sykescottages/php:7.1-cli`
+- 7.1.33 fpm (Deprecated) - `sykescottages/php:7.1-fpm`
+- 7.2.34 cli (Deprecated) - `sykescottages/php:7.2-cli`
+- 7.2.34 fpm (Deprecated) - `sykescottages/php:7.2-fpm`
+- 7.3.33 cli (Deprecated) - `sykescottages/php:7.3-cli`
+- 7.3.33 fpm (Deprecated) - `sykescottages/php:7.3-fpm`
+- 7.4.33 cli (Deprecated) - `sykescottages/php:7.4-cli`
+- 7.4.33 fpm (Deprecated) - `sykescottages/php:7.4-fpm`
+- **8.0.29 cli (EOL 2023-11-26) - `sykescottages/php:8.0-cli`**
+- **8.0.29 fpm (EOL 2023-11-26) - `sykescottages/php:8.0-fpm`**
+- **8.1.21 cli (EOL 2024-11-25) - `sykescottages/php:8.1-cli`**
+- **8.1.21 fpm (EOL 2024-11-25) - `sykescottages/php:8.1-fpm`**
+- **8.2.8 (EOL 2025-12-08) - `sykescottages/php:8.2-cli`**
+- **8.2.8 (EOL 2025-12-08) - `sykescottages/php:8.2-fpm`**
 
 ## Testing
 
