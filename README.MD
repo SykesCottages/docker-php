@@ -49,12 +49,12 @@ COPY --from=composer /usr/bin/composer /usr/bin/composer
 - 7.3.33 fpm (Deprecated) - `sykescottages/php:7.3-fpm`
 - 7.4.33 cli (Deprecated) - `sykescottages/php:7.4-cli`
 - 7.4.33 fpm (Deprecated) - `sykescottages/php:7.4-fpm`
-- **8.0.29 cli (EOL 2023-11-26) - `sykescottages/php:8.0-cli`**
-- **8.0.29 fpm (EOL 2023-11-26) - `sykescottages/php:8.0-fpm`**
-- **8.1.21 cli (EOL 2024-11-25) - `sykescottages/php:8.1-cli`**
-- **8.1.21 fpm (EOL 2024-11-25) - `sykescottages/php:8.1-fpm`**
-- **8.2.8 (EOL 2025-12-08) - `sykescottages/php:8.2-cli`**
-- **8.2.8 (EOL 2025-12-08) - `sykescottages/php:8.2-fpm`**
+- **8.0.30 cli (EOL 2023-11-26) - `sykescottages/php:8.0-cli`**
+- **8.0.30 fpm (EOL 2023-11-26) - `sykescottages/php:8.0-fpm`**
+- **8.1.22 cli (EOL 2024-11-25) - `sykescottages/php:8.1-cli`**
+- **8.1.22 fpm (EOL 2024-11-25) - `sykescottages/php:8.1-fpm`**
+- **8.2.9 (EOL 2025-12-08) - `sykescottages/php:8.2-cli`**
+- **8.2.9 (EOL 2025-12-08) - `sykescottages/php:8.2-fpm`**
 
 ## Testing
 
