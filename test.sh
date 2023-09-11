@@ -1,6 +1,7 @@
 #!/bin/bash
 
-VERSIONS=("5.6" "7.0" "7.1" "7.2" "7.3" "7.4" "8.0" "8.1")
+VERSIONS=($(find . -type d -name '[0-9]\.[0-9]' | sort))
+
 for VERSION in "${VERSIONS[@]}"; do
   docker-compose -f $VERSION/cli/docker-compose.test.yml build --no-cache &&
     docker-compose -f $VERSION/cli/docker-compose.test.yml run --rm sut
