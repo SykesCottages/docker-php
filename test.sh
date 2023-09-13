@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSIONS=($(find . -type d -regex '.*/[0-9]\{1,2,\}\.[0-9]' | sort))
+VERSIONS=($(find . -type d -regex '.*/[0-9]+\.[0-9]' | sort | sed 's/\.\///'))
 
 for VERSION in "${VERSIONS[@]}"; do
   docker-compose -f $VERSION/cli/docker-compose.test.yml build --no-cache &&
