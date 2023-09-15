@@ -56,6 +56,11 @@ COPY --from=composer /usr/bin/composer /usr/bin/composer
 - **8.2.10 (EOL 2025-12-08) - `sykescottages/php:8.2-cli`**
 - **8.2.10 (EOL 2025-12-08) - `sykescottages/php:8.2-fpm`**
 
+## Image Itinerary
+
+For better visibility of packages there is now an included aptitude itinerary with each tag, this is located in the corresponding folder to the tag.
+This will give better clarity on package version changes and be reflected in the git history.
+
 ## Testing
 
 All testing is done in the form of a SUT containers which is run by the Docker Hub (see [Automated repository tests](https://docs.docker.com/docker-hub/builds/automated-testing/) for more information) and runs a variety of shell scripts.
