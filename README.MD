@@ -55,6 +55,8 @@ COPY --from=composer /usr/bin/composer /usr/bin/composer
 - **8.1.23 fpm (EOL 2024-11-25) - `sykescottages/php:8.1-fpm`**
 - **8.2.10 (EOL 2025-12-08) - `sykescottages/php:8.2-cli`**
 - **8.2.10 (EOL 2025-12-08) - `sykescottages/php:8.2-fpm`**
+- **8.3.0RC1 (Release Candidate) - `sykescottages/php:8.3-cli`**
+- **8.3.0RC1 (Release Candidate) - `sykescottages/php:8.3-fpm`**
 
 ## Image Itinerary
 
