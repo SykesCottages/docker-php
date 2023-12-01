@@ -18,10 +18,3 @@ do
 done
 
 wait
-
-for VERSION in "${BASE_VERSIONS[@]}"
-do
-  docker rmi sykescottages/php:${VERSION} >> /dev/null 2>&1 &
-done
-
-wait
