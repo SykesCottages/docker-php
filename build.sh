@@ -2,11 +2,18 @@
 
 VERSION=$1
 
-docker build --no-cache -t sykescottages/php:${VERSION}-cli $VERSION/cli
-docker push sykescottages/php:${VERSION}-cli
+docker buildx build \
+  --platform linux/amd64,linux/arm64,linux/arm/v7,linux/arm64/v8 \
+  --quiet \
+  --no-cache \
+  --push \
+  -t sykescottages/php:${VERSION}-cli \
+  $VERSION/cli
 
-docker build --no-cache -t sykescottages/php:${VERSION}-fpm $VERSION/fpm
-docker push sykescottages/php:${VERSION}-fpm
-
-docker rmi sykescottages/php:${VERSION}-cli
-docker rmi sykescottages/php:${VERSION}-fpm
+docker buildx build \
+  --platform linux/amd64,linux/arm64,linux/arm/v7,linux/arm64/v8 \
+  --quiet \
+  --no-cache \
+  --push \
+  -t sykescottages/php:${VERSION}-fpm \
+  $VERSION/fpm
