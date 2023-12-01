@@ -10,5 +10,5 @@ docker buildx build \
   --quiet \
   --no-cache \
   --push \
-  -t sykescottages/php:${VERSION}-fpm \
+  -t sykescottages/php:${VERSION} \
   $VERSION
