@@ -14,8 +14,9 @@ do
   docker manifest push $TAG
 done
 
-VERSIONS=($(find . -type d -regex '\.*/[0-9]+' | sort | sed 's/\.\///'))
-for VERSION in "${VERSIONS[@]}"; do
+VERSIONS=($(find . -type d -regex '\.*/[0-9]+\.[0-9]+' | sort | sed 's/\.\///'))
+for VERSION in "${VERSIONS[@]}"
+do
   TAG="sykescottages/php:${VERSION}-cli"
   docker manifest create $TAG \
     --amend "$TAG-amd64" \
