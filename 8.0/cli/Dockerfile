@@ -1,4 +1,5 @@
-FROM --platform=$BUILDPLATFORM sykescottages/php:8-base
+ARG ARCH=amd64
+FROM sykescottages/php:8-base-$ARCH
 
 RUN apt-get update; \
     apt-get install -y -q \

@@ -1,4 +1,5 @@
-FROM --platform=$BUILDPLATFORM sykescottages/base:ubuntu-20-04
+ARG ARCH=amd64
+FROM sykescottages/base:ubuntu-20-04-$ARCH
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime 
 
