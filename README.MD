@@ -36,6 +36,24 @@ FROM sykescottages/php:7.4-cli
 COPY --from=composer /usr/bin/composer /usr/bin/composer
 ```
 
+## Architecture Support
+
+All our images have support for:
+- `linux/amd64`
+- `linux/arm64/v8`
+
+Obtaining platform specific architectures:
+
+```shell
+docker pull --platform=<ARCHITECTURE> sykescottages/php:<VERSION>
+```
+
+Testing you have the right architecture:
+
+```shell
+docker run -it --platform=<ARCHITECTURE> sykescottages/php:<VERSION> arch
+```
+
 ## Supported versions and available tags
 - 5.6.40 cli (Deprecated) - `sykescottages/php:5.6-cli`
 - 5.6.40 fpm (Deprecated) - `sykescottages/php:5.6-fpm`

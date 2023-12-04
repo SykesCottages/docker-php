@@ -1,19 +1,13 @@
 #!/bin/bash
 
 VERSION=$1
+ARCH=$2
 
-docker buildx build \
-  --platform linux/amd64,linux/arm64,linux/arm/v7,linux/arm64/v8 \
-  --quiet \
-  --no-cache \
-  --push \
-  -t sykescottages/php:${VERSION}-cli \
-  $VERSION/cli
+TAG_CLI="sykescottages/php:${VERSION}-cli-${ARCH}"
+TAG_FPM="sykescottages/php:${VERSION}-fpm-${ARCH}"
 
-docker buildx build \
-  --platform linux/amd64,linux/arm64,linux/arm/v7,linux/arm64/v8 \
-  --quiet \
-  --no-cache \
-  --push \
-  -t sykescottages/php:${VERSION}-fpm \
-  $VERSION/fpm
+docker build --quiet --no-cache -t $TAG_CLI $VERSION/cli
+docker push $TAG_CLI
+
+docker build --quiet --no-cache -t $TAG_FPM $VERSION/fpm
+docker push $TAG_FPM

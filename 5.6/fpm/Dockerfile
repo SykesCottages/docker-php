@@ -1,4 +1,4 @@
-FROM sykescottages/php:5.6-cli
+FROM --platform=$BUILDPLATFORM sykescottages/php:5.6-cli
 
 RUN apt-get update && \
     apt-get install -y -q \

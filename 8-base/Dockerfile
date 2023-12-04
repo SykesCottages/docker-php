@@ -1,4 +1,4 @@
-FROM sykescottages/base:ubuntu-22-04
+FROM --platform=$BUILDPLATFORM sykescottages/base:ubuntu-22-04
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime 
 

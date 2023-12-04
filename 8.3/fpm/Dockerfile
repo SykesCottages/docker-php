@@ -1,4 +1,4 @@
-FROM sykescottages/php:8.3-cli
+FROM --platform=$BUILDPLATFORM sykescottages/php:8.3-cli
 
 RUN apt-get update && \
     apt-get install -y -q \

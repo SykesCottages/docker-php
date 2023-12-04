@@ -1,4 +1,4 @@
-FROM sykescottages/php:8-base
+FROM --platform=$BUILDPLATFORM sykescottages/php:8-base
 
 RUN apt-get update; \
     apt-get install -y -q \
