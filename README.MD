@@ -69,12 +69,12 @@ docker run -it --platform=<ARCHITECTURE> sykescottages/php:<VERSION> arch
 - 7.4.33 fpm (Deprecated) - `sykescottages/php:7.4-fpm`
 - **8.0.30 cli (Deprecated) - `sykescottages/php:8.0-cli`**
 - **8.0.30 fpm (Deprecated) - `sykescottages/php:8.0-fpm`**
-- **8.1.27 cli (EOL 2024-11-25) - `sykescottages/php:8.1-cli`**
-- **8.1.27 fpm (EOL 2024-11-25) - `sykescottages/php:8.1-fpm`**
-- **8.2.14 (EOL 2025-12-08) - `sykescottages/php:8.2-cli`**
-- **8.2.14 (EOL 2025-12-08) - `sykescottages/php:8.2-fpm`**
-- **8.3.1 (Release Candidate) - `sykescottages/php:8.3-cli`**
-- **8.3.1 (Release Candidate) - `sykescottages/php:8.3-fpm`**
+- **8.1.28 cli (EOL 2024-11-25) - `sykescottages/php:8.1-cli`**
+- **8.1.28 fpm (EOL 2024-11-25) - `sykescottages/php:8.1-fpm`**
+- **8.2.19 (EOL 2025-12-08) - `sykescottages/php:8.2-cli`**
+- **8.2.19 (EOL 2025-12-08) - `sykescottages/php:8.2-fpm`**
+- **8.3.6 (Release Candidate) - `sykescottages/php:8.3-cli`**
+- **8.3.6 (Release Candidate) - `sykescottages/php:8.3-fpm`**
 
 ## Image Itinerary
 
