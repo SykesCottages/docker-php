@@ -73,8 +73,8 @@ docker run -it --platform=<ARCHITECTURE> sykescottages/php:<VERSION> arch
 - **8.1.28 fpm (EOL 2024-11-25) - `sykescottages/php:8.1-fpm`**
 - **8.2.19 (EOL 2025-12-08) - `sykescottages/php:8.2-cli`**
 - **8.2.19 (EOL 2025-12-08) - `sykescottages/php:8.2-fpm`**
-- **8.3.6 (Release Candidate) - `sykescottages/php:8.3-cli`**
-- **8.3.6 (Release Candidate) - `sykescottages/php:8.3-fpm`**
+- **8.3.7 (Release Candidate) - `sykescottages/php:8.3-cli`**
+- **8.3.7 (Release Candidate) - `sykescottages/php:8.3-fpm`**
 
 ## Image Itinerary
 
