@@ -1,6 +1,7 @@
 #!/bin/bash
 
 export DOCKER_CLI_EXPERIMENTAL=enabled
+DATE=$(date '+%Y%m%d')
 
 docker login >>/dev/null 2>&1
 
@@ -25,11 +26,25 @@ do
     --amend "$TAG-arm64"
   docker manifest push $TAG
 
+  VERSION_TAG="${TAG}-${DATE}"
+  docker manifest rm $VERSION_TAG
+  docker manifest create $VERSION_TAG \
+    --amend "$TAG-amd64" \
+    --amend "$TAG-arm64"
+  docker manifest push $VERSION_TAG
+
   TAG="sykescottages/php:${VERSION}-fpm"
   docker manifest rm $TAG
   docker manifest create $TAG \
     --amend "$TAG-amd64" \
     --amend "$TAG-arm64"
   docker manifest push $TAG
+
+  VERSION_TAG="${TAG}-${DATE}"
+  docker manifest rm $VERSION_TAG
+  docker manifest create $VERSION_TAG \
+    --amend "$TAG-amd64" \
+    --amend "$TAG-arm64"
+  docker manifest push $VERSION_TAG
 
 done
