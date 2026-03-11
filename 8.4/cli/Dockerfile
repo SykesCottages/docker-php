@@ -4,6 +4,7 @@ FROM sykescottages/php:8-base-$ARCH
 RUN apt-get update; \
     apt-get install -y -q \
         php8.4 \
+        php8.4-decimal \
         php8.4-bcmath \
         php8.4-curl \
         php8.4-dev \

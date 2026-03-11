@@ -4,6 +4,7 @@ FROM sykescottages/php:7-base-$ARCH
 RUN apt-get update && \
     apt-get install -y -q \
         php7.3 \
+        php7.3-decimal \
         php7.3-bcmath \
         php7.3-curl \
         php7.3-dev \
