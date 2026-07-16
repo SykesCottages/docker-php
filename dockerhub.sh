@@ -14,15 +14,15 @@ else
   exit 1
 fi
 
-BASE_VERSIONS=($(find . -type d -regex '\.*/[0-9]+-base' | sort | sed 's/\.\///'))
+BASE_VERSIONS=($(find . -maxdepth 1 -type d | grep -E '^\./[0-9]+-base' | sort | sed 's/\.\///'))
 for VERSION in "${BASE_VERSIONS[@]}"
 do
-  ./build-base.sh $VERSION $ARCH >> /dev/null 2>&1 &
+  ./build-base.sh $VERSION $ARCH  >> /dev/null 2>&1 &
 done
 
 wait
 
-VERSIONS=($(find . -type d -regex '\.*/[0-9]+\.[0-9]+' | sort | sed 's/\.\///'))
+VERSIONS=($(find . -maxdepth 1 -type d | grep -E '^\./[0-9]+\.[0-9]+$' | sort | sed 's/\.\///'))
 for VERSION in "${VERSIONS[@]}"
 do
   ./build.sh $VERSION $ARCH >> /dev/null 2>&1 &

@@ -5,7 +5,9 @@ DATE=$(date '+%Y%m%d')
 
 docker login >>/dev/null 2>&1
 
-BASE_VERSIONS=($(find . -type d -regex '\.*/[0-9]+-base' | sort | sed 's/\.\///'))
+# Update the base alpine manifests
+BASE_VERSIONS=($(find . -maxdepth 1 -type d | grep -E '^\./[0-9]+-base' | sort | sed 's/\.\///'))
+
 for VERSION in "${BASE_VERSIONS[@]}"
 do
   TAG="sykescottages/php:$VERSION"
@@ -16,7 +18,8 @@ do
   docker manifest push $TAG
 done
 
-VERSIONS=($(find . -type d -regex '\.*/[0-9]+\.[0-9]+' | sort | sed 's/\.\///'))
+# Update the PHP specific versions manifests
+VERSIONS=($(find . -maxdepth 1 -type d | grep -E '^\./[0-9]+\.[0-9]+$' | sort | sed 's/\.\///'))
 for VERSION in "${VERSIONS[@]}"
 do
   TAG="sykescottages/php:${VERSION}-cli"

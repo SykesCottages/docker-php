@@ -1,8 +1,8 @@
 #!/bin/bash
 
-VERSIONS=($(find . -type d -regex '\.*/[0-9]+\.[0-9]+' | sort | sed 's/\.\///'))
-
-for VERSION in "${VERSIONS[@]}"; do
+VERSIONS=($(find . -maxdepth 1 -type d | grep -E '^\./[0-9]+\.[0-9]+$' | sort | sed 's/\.\///'))
+for VERSION in "${VERSIONS[@]}"
+do
   docker-compose -f $VERSION/cli/docker-compose.test.yml build --no-cache &&
     docker-compose -f $VERSION/cli/docker-compose.test.yml run --rm sut
 
