@@ -18,6 +18,8 @@ itShouldCheckThatAllPhpModulesExists() {
   doesPhpModuleExist soap
   doesPhpModuleExist xml
   doesPhpModuleExist zip
+  doesPhpModuleExist protobuf
+  doesPhpModuleExist opentelemetry
 }
 
 itShouldMatchTheDesiredVersionOfPhp() {

@@ -13,7 +13,9 @@ RUN apt-get update; \
         php8.3-mysql \
         php8.3-soap \
         php8.3-xml \
-        php8.3-zip
+        php8.3-zip \
+        php8.3-protobuf \
+        php8.3-opentelemetry
 
 RUN apt-get autoremove -y -q && \
     apt-get autoclean -y -q && \

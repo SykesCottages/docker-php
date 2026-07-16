@@ -13,7 +13,9 @@ RUN apt-get update; \
         php8.2-mysql \
         php8.2-soap \
         php8.2-xml \
-        php8.2-zip
+        php8.2-zip \
+        php8.2-protobuf \
+        php8.2-opentelemetry
 
 RUN apt-get autoremove -y -q && \
     apt-get autoclean -y -q && \
