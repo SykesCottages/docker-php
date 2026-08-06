@@ -15,6 +15,7 @@ itShouldCheckThatAllPhpModulesExists() {
   doesPhpModuleExist mbstring
   doesPhpModuleExist mysqli
   doesPhpModuleExist soap
+  doesPhpModuleExist uopz
   doesPhpModuleExist xml
   doesPhpModuleExist zip
 }

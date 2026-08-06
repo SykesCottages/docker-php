@@ -14,7 +14,8 @@ RUN apt-get update && \
         php7.1-mysql \
         php7.1-soap \
         php7.1-xml \
-        php7.1-zip
+        php7.1-zip \
+        php7.1-uopz
 
 RUN apt-get autoremove -y -q && \
     apt-get autoclean -y -q && \
