@@ -23,5 +23,11 @@ RUN apt-get autoremove -y -q && \
 
 # Enable Error Logs
 RUN echo "error_log = /dev/stderr" >> /etc/php/7.4/cli/php.ini
+RUN echo "uopz.exit = 1" >> /etc/php/7.4/cli/php.ini
+
+COPY ./test.php /tmp/test.php
+COPY ./run_tests.sh /tmp/test.sh
+
+RUN chmod +x /tmp/test.sh && /tmp/test.sh
 
 ENTRYPOINT [ "entrypoint-cli" ]

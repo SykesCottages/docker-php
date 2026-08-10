@@ -18,6 +18,7 @@ RUN sed -i 's/;clear_env = no/clear_env = no/g' /etc/php/7.1/fpm/pool.d/www.conf
 
 # Enable PHP Logs
 RUN echo "error_log = /dev/stderr" >> /etc/php/7.1/fpm/php.ini
+RUN echo "uopz.exit = 1" >> /etc/php/7.1/fpm/php.ini
 
 # Enable FPM Logs
 RUN sed -i 's|\(error_log =\).*|\1 /dev/stderr|g' /etc/php/7.1/fpm/php-fpm.conf
@@ -31,6 +32,12 @@ RUN echo "php_admin_flag[log_errors] = on" >> /etc/php/7.1/fpm/pool.d/www.conf
 RUN echo "php_admin_flag[display_errors] = off" >> /etc/php/7.1/fpm/pool.d/www.conf
 RUN echo "php_admin_value[error_reporting] = E_ALL & ~E_NOTICE & ~E_WARNING & ~E_STRICT & ~E_DEPRECATED" >> /etc/php/7.1/fpm/pool.d/www.conf
 RUN echo "php_admin_value[error_log] = /dev/stderr" >> /etc/php/7.1/fpm/pool.d/www.conf
+RUN echo "php_admin_value[uopz.exit] = 1" >> /etc/php/7.1/fpm/pool.d/www.conf
+
+COPY ./test.php /tmp/test.php
+COPY ./run_tests.sh /tmp/test.sh
+
+RUN chmod +x /tmp/test.sh && /tmp/test.sh
 
 ENTRYPOINT [ "entrypoint-fpm" ]
 

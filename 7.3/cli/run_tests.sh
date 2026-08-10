@@ -47,6 +47,18 @@ doesPhpMatchVersion() {
     fi
 }
 
+itShouldRunPhpTestsSuccessfully() {
+    php /tmp/test.php
+    if [ $? -ne 0 ]; then
+        echo "Error: PHP test script failed." >&2
+        exit 1
+    fi
+}
+
 itShouldCheckThatAllInstalledSoftwareExists
 itShouldCheckThatAllPhpModulesExists
 itShouldMatchTheDesiredVersionOfPhp
+itShouldRunPhpTestsSuccessfully
+
+echo "All tests passed successfully."
+

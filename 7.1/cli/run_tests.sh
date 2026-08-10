@@ -32,7 +32,7 @@ doesCommandExist() {
 }
 
 doesPhpModuleExist() {
-    MODULE=$(php -m|grep -e "^$1$")
+    MODULE=$(php-fpm -m|grep -e "^$1$")
     if [ $1 != "$MODULE" ]; then
       echo "Error: $1 PHP module is not installed." >&2
       exit 1
@@ -40,13 +40,24 @@ doesPhpModuleExist() {
 }
 
 doesPhpMatchVersion() {
-    VERSION=$(php -v|grep -i "PHP $1")
+    VERSION=$(php-fpm -v|grep -i "PHP $1")
     if [ -z "$VERSION" ]; then
       echo "Error: PHP version $1 is not found." >&2
       exit 1
     fi
 }
 
+itShouldRunPhpTestsSuccessfully() {
+    php /tmp/test.php
+    if [ $? -ne 0 ]; then
+        echo "Error: PHP test script failed." >&2
+        exit 1
+    fi
+}
+
 itShouldCheckThatAllInstalledSoftwareExists
 itShouldCheckThatAllPhpModulesExists
 itShouldMatchTheDesiredVersionOfPhp
+itShouldRunPhpTestsSuccessfully
+
+echo "All tests passed successfully."
