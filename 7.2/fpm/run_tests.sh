@@ -6,7 +6,7 @@ itShouldCheckThatAllInstalledSoftwareExists() {
     doesCommandExist php-fpm
 }
 
-itShouldCheckThatAllPhpModulesExists() {
+itShouldCheckThatAllPhpFpmModulesExists() {
   doesPhpFpmModuleExist bcmath
   doesPhpFpmModuleExist curl
   doesPhpFpmModuleExist intl
@@ -20,7 +20,7 @@ itShouldCheckThatAllPhpModulesExists() {
 }
 
 itShouldMatchTheDesiredVersionOfPhpFpm() {
-  doesPhpMatchVersion $PHP_VERSION
+  doesPhpFpmMatchVersion $PHP_VERSION
 }
 
 doesCommandExist() {
@@ -38,7 +38,7 @@ doesPhpFpmModuleExist() {
     fi
 }
 
-doesPhpMatchVersion() {
+doesPhpFpmMatchVersion() {
     VERSION=$(php -v|grep -i "PHP $1")
     if [ -z "$VERSION" ]; then
       echo "Error: PHP version $1 is not found." >&2
@@ -46,7 +46,7 @@ doesPhpMatchVersion() {
     fi
 }
 
-itShouldRunPhpTestsSuccessfully() {
+itShouldRunPhpFpmTestsSuccessfully() {
     php /tmp/test.php
     if [ $? -ne 0 ]; then
         echo "Error: PHP test script failed." >&2
@@ -55,8 +55,8 @@ itShouldRunPhpTestsSuccessfully() {
 }
 
 itShouldCheckThatAllInstalledSoftwareExists
-itShouldCheckThatAllPhpModulesExists
+itShouldCheckThatAllPhpFpmModulesExists
 itShouldMatchTheDesiredVersionOfPhpFpm
-itShouldRunPhpTestsSuccessfully
+itShouldRunPhpFpmTestsSuccessfully
 
 echo "All tests passed successfully."

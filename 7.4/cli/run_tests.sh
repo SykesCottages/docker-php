@@ -61,4 +61,3 @@ itShouldMatchTheDesiredVersionOfPhp
 itShouldRunPhpTestsSuccessfully
 
 echo "All tests passed successfully."
-

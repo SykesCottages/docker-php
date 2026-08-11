@@ -23,7 +23,7 @@ RUN apt-get autoremove -y -q && \
 
 # Enable Error Logs
 RUN echo "error_log = /dev/stderr" >> /etc/php/7.2/cli/php.ini
-RUN echo "uopz.exit = 1" >> /etc/php/7.2/cli/php.ini
+RUN echo "uopz.exit = 1" >> /etc/php/7.2/mods-available/uopz.ini
 
 COPY ./test.php /tmp/test.php
 COPY ./run_tests.sh /tmp/test.sh
