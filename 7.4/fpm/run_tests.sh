@@ -54,9 +54,18 @@ itShouldRunPhpFpmTestsSuccessfully() {
     fi
 }
 
+itShouldDisableSessionUploadProgress() {
+  php-fpm -i 2>/dev/null | grep -F 'session.upload_progress.enabled' | grep -q '=> Off => Off'
+  if [ $? -ne 0 ]; then
+    echo "Error: session.upload_progress.enabled is not Off." >&2
+    exit 1
+  fi
+}
+
 itShouldCheckThatAllInstalledSoftwareExists
 itShouldCheckThatAllPhpFpmModulesExists
 itShouldMatchTheDesiredVersionOfPhpFpm
 itShouldRunPhpFpmTestsSuccessfully
+itShouldDisableSessionUploadProgress
 
 echo "All tests passed successfully."

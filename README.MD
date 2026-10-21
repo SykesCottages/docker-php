@@ -128,6 +128,14 @@ RUN apt-get remove --purge -y php8.0-mysql \
   apt-get autoclean -y -q
 ```
 
+## Security defaults
+
+Session upload progress is disabled in every CLI and FPM image:
+
+```
+session.upload_progress.enabled = Off
+```
+
 ## Contributions
 
 Contributions are welcome, but please adhere to the [CONTRIBUTION.MD](https://github.com/SykesCottages/docker-php/blob/master/CONTRIBUTION.MD). Also, if you could ensure that there are tests with every modification of the Dockerfiles to verify that your changes work.

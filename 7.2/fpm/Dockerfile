@@ -19,6 +19,9 @@ RUN sed -i 's/;clear_env = no/clear_env = no/g' /etc/php/7.2/fpm/pool.d/www.conf
 # Enable PHP Logs
 RUN echo "error_log = /dev/stderr" >> /etc/php/7.2/fpm/php.ini
 
+# Disable session upload progress
+RUN echo "session.upload_progress.enabled = Off" >> /etc/php/7.2/fpm/php.ini
+
 # Enable FPM Logs
 RUN sed -i 's|\(error_log =\).*|\1 /dev/stderr|g' /etc/php/7.2/fpm/php-fpm.conf
 

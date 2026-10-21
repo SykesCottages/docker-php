@@ -29,4 +29,7 @@ RUN phpdismod opentelemetry && \
 # Enable Error Logs
 RUN echo "error_log = /dev/stderr" >> /etc/php/8.0/cli/php.ini
 
+# Disable session upload progress
+RUN echo "session.upload_progress.enabled = Off" >> /etc/php/8.0/cli/php.ini
+
 ENTRYPOINT [ "entrypoint-cli" ]

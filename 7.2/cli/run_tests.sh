@@ -55,9 +55,18 @@ itShouldRunPhpTestsSuccessfully() {
     fi
 }
 
+itShouldDisableSessionUploadProgress() {
+  php -r 'exit(ini_get("session.upload_progress.enabled") ? 1 : 0);'
+  if [ $? -ne 0 ]; then
+    echo "Error: session.upload_progress.enabled is not Off." >&2
+    exit 1
+  fi
+}
+
 itShouldCheckThatAllInstalledSoftwareExists
 itShouldCheckThatAllPhpModulesExists
 itShouldMatchTheDesiredVersionOfPhp
 itShouldRunPhpTestsSuccessfully
+itShouldDisableSessionUploadProgress
 
 echo "All tests passed successfully."
