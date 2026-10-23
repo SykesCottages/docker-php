@@ -25,7 +25,7 @@ RUN apt-get autoremove -y -q && \
 RUN echo "error_log = /dev/stderr" >> /etc/php/7.2/cli/php.ini
 
 # Disable session upload progress
-RUN echo "session.upload_progress.enabled = Off" >> /etc/php/7.2/cli/php.ini
+RUN echo "session.upload_progress.enabled = 0" >> /etc/php/7.2/cli/php.ini
 RUN echo "uopz.exit = 1" >> /etc/php/7.2/mods-available/uopz.ini
 
 COPY ./test.php /tmp/test.php

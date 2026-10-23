@@ -24,6 +24,6 @@ RUN apt-get autoremove -y -q && \
 RUN echo "error_log = /dev/stderr" >> /etc/php/7.0/cli/php.ini
 
 # Disable session upload progress
-RUN echo "session.upload_progress.enabled = Off" >> /etc/php/7.0/cli/php.ini
+RUN echo "session.upload_progress.enabled = 0" >> /etc/php/7.0/cli/php.ini
 
 ENTRYPOINT [ "entrypoint-cli" ]
