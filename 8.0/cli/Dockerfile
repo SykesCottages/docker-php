@@ -13,9 +13,7 @@ RUN apt-get update; \
         php8.0-mysql \
         php8.0-soap \
         php8.0-xml \
-        php8.0-zip \
-        php8.0-protobuf \
-        php8.0-opentelemetry
+        php8.0-zip
 
 RUN update-alternatives --set php /usr/bin/php8.0
 
