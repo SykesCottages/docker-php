@@ -30,4 +30,7 @@ RUN echo "error_log = /dev/stderr" >> /etc/php/8.2/cli/php.ini
 # Disable session upload progress
 RUN echo "session.upload_progress.enabled = 0" >> /etc/php/8.2/cli/php.ini
 
+# Disable fatal error backtraces
+RUN echo "fatal_error_backtraces = 0" >> /etc/php/8.2/cli/php.ini
+
 ENTRYPOINT [ "entrypoint-cli" ]

@@ -54,7 +54,16 @@ itShouldDisableSessionUploadProgress() {
   fi
 }
 
+itShouldDisableFatalErrorBacktraces() {
+  php -r 'exit(get_cfg_var("fatal_error_backtraces") === "0" && !ini_get("fatal_error_backtraces") ? 0 : 1);'
+  if [ $? -ne 0 ]; then
+    echo "Error: fatal_error_backtraces is not Off." >&2
+    exit 1
+  fi
+}
+
 itShouldCheckThatAllInstalledSoftwareExists
 itShouldCheckThatAllPhpModulesExists
 itShouldMatchTheDesiredVersionOfPhp
 itShouldDisableSessionUploadProgress
+itShouldDisableFatalErrorBacktraces

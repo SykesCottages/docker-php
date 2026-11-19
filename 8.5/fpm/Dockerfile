@@ -22,6 +22,9 @@ RUN echo "error_log = /dev/stderr" >> /etc/php/8.5/fpm/php.ini
 # Disable session upload progress
 RUN echo "session.upload_progress.enabled = 0" >> /etc/php/8.5/fpm/php.ini
 
+# Disable fatal error backtraces
+RUN echo "fatal_error_backtraces = 0" >> /etc/php/8.5/fpm/php.ini
+
 # Enable FPM Logs
 RUN sed -i 's|\(error_log =\).*|\1 /dev/stderr|g' /etc/php/8.5/fpm/php-fpm.conf
 
