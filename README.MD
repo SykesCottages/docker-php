@@ -107,13 +107,7 @@ RUN apt-get autoremove -y -q && \
     rm -rf /var/lib/apt/lists/*
 ```
 
-For **PHP 8.6** (built from source without `ondrej`), use `php-ext-install` to install bundled core or PECL extensions, and `phpenmod` / `phpdismod` to enable or disable them:
-
-```dockerfile
-RUN php-ext-install redis apcu
-RUN php-ext-install --no-enable xdebug && phpenmod -s cli xdebug
-RUN phpdismod decimal
-```
+For **PHP 8.6** (built from source without `ondrej`), see the dedicated [PHP 8.6 documentation](./8.6/README.md) for using `php-ext-install`, `phpenmod`, and `phpdismod`.
 
 With all images (apart from the base) there is a pre-canned set of extensions:
 - decimal
