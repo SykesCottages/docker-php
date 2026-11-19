@@ -79,6 +79,8 @@ docker run -it --platform=<ARCHITECTURE> sykescottages/php:<VERSION> arch
 - **8.4.28 (EOL 2028-12-31) - `sykescottages/php:8.4-fpm`**
 - **8.5.13 (EOL 2029-12-31) - `sykescottages/php:8.5-cli`**
 - **8.5.13 (EOL 2029-12-31) - `sykescottages/php:8.5-fpm`**
+- **8.6.0 (EOL 2030-12-31) - `sykescottages/php:8.6-cli`**
+- **8.6.0 (EOL 2030-12-31) - `sykescottages/php:8.6-fpm`**
 
 ## Image Itinerary
 
@@ -103,6 +105,14 @@ RUN apt-get update && \
 RUN apt-get autoremove -y -q && \
     apt-get autoclean -y -q && \
     rm -rf /var/lib/apt/lists/*
+```
+
+For **PHP 8.6** (built from source without `ondrej`), use `php-ext-install` to install bundled core or PECL extensions, and `phpenmod` / `phpdismod` to enable or disable them:
+
+```dockerfile
+RUN php-ext-install redis apcu
+RUN php-ext-install --no-enable xdebug && phpenmod -s cli xdebug
+RUN phpdismod decimal
 ```
 
 With all images (apart from the base) there is a pre-canned set of extensions:

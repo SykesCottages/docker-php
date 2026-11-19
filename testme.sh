@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -uo pipefail
 
-VERSIONS=("7.4" "8.0" "8.1" "8.2" "8.3" "8.4" "8.5")
+VERSIONS=("7.4" "8.0" "8.1" "8.2" "8.3" "8.4" "8.5" "8.6")
 VARIANTS=("cli" "fpm")
 ARCHS=("amd64" "arm64")
 
@@ -18,6 +18,7 @@ for VERSION in "${VERSIONS[@]}"; do
     8.3) MIN_SAFE="8.3.37" ;;
     8.4) MIN_SAFE="8.4.28" ;;
     8.5) MIN_SAFE="8.5.13" ;;
+    8.6) MIN_SAFE="8.6.0" ;;
   esac
 
   if [[ -n "$MIN_SAFE" ]]; then
