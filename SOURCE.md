@@ -31,7 +31,9 @@ All tags support `linux/amd64` and `linux/arm64/v8`. Each `-src-fpm` image exten
 - `mbstring`
 - `mysqli` & `pdo_mysql` (`mysqlnd`)
 - `openssl`
+- `opentelemetry` (pre-compiled in `mods-available`, disabled by default; enable via `phpenmod opentelemetry`)
 - `pcntl`
+- `protobuf` (pre-compiled in `mods-available`, disabled by default; enable via `phpenmod protobuf`)
 - `readline` (CLI)
 - `shmop`
 - `soap`
@@ -145,7 +147,9 @@ phpenmod decimal/30
 
 ## Security & Logging Defaults
 
+- CLI `memory_limit = -1` (unlimited, matching Debian/Sury CLI default; FPM retains `memory_limit = 128M`)
 - `error_log = /dev/stderr`
 - `session.upload_progress.enabled = 0`
 - `fatal_error_backtraces = 0`
 - FPM listens on `[::]:9000`, preserves environment variables (`clear_env = no`), logs errors to `/dev/stderr`, and captures worker output (`catch_workers_output = yes`).
+- Standard binary paths `/usr/bin/php`, `/usr/bin/php<major.minor>`, `/usr/bin/php-fpm`, and `/usr/sbin/php-fpm<major.minor>` are symlinked for compatibility with hardcoded scripts and process managers.

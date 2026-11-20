@@ -151,7 +151,9 @@ for spec in $EXTS; do
     # Strip optional channel prefix (e.g. channel://.../foo -> foo)
     mod_name="${mod_name##*/}"
 
-    if [ "$spec" = "$mod_name" ] && is_bundled_ext "$mod_name"; then
+    if [ "$spec" = "$mod_name" ] && [ -f "${EXT_DIR}/${mod_name}.so" ]; then
+        echo "Extension '${mod_name}' is already compiled at ${EXT_DIR}/${mod_name}.so; enabling."
+    elif [ "$spec" = "$mod_name" ] && is_bundled_ext "$mod_name"; then
         ensure_php_source
         (
             cd "${SRC_TMP}/ext/${mod_name}"
@@ -166,7 +168,7 @@ for spec in $EXTS; do
             pecl channel-update pecl.php.net || true
             PECL_UPDATED=1
         fi
-        yes '' | pecl install "$spec"
+        yes '' | pecl install -f "$spec"
     fi
 
     register_ext "$mod_name"

@@ -2,11 +2,20 @@
 
 itShouldCheckThatAllInstalledSoftwareExists() {
     doesCommandExist php-fpm
+    doesExecutablePathExist /usr/bin/php-fpm
+    doesExecutablePathExist /usr/sbin/php-fpm8.3
 }
 
 doesCommandExist() {
     if ! [ -x "$(command -v $1)" ]; then
       echo "Error: $1 is not installed." >&2
+      exit 1
+    fi
+}
+
+doesExecutablePathExist() {
+    if ! [ -x "$1" ]; then
+      echo "Error: $1 is not executable." >&2
       exit 1
     fi
 }

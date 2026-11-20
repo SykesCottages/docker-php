@@ -70,6 +70,7 @@ RUN set -eux; \
     make install-fpm; \
     cp php.ini-production /etc/php/8.6/fpm/php.ini; \
     cp /etc/php/8.6/fpm/php-fpm.conf.default /etc/php/8.6/fpm/php-fpm.conf; \
+    sed -i 's|;pid = run/php-fpm.pid|pid = /run/php/php8.6-fpm.pid|g' /etc/php/8.6/fpm/php-fpm.conf; \
     sed -i 's|include=/etc/php/8.6/fpm/php-fpm.d/\*.conf|include=/etc/php/8.6/fpm/pool.d/*.conf|g' /etc/php/8.6/fpm/php-fpm.conf; \
     cp /etc/php/8.6/fpm/php-fpm.d/www.conf.default /etc/php/8.6/fpm/pool.d/www.conf; \
     rm -rf /etc/php/8.6/fpm/php-fpm.d /etc/php/8.6/fpm/php-fpm.conf.default /usr/src/php
@@ -84,7 +85,8 @@ COPY --from=builder /etc/php/8.6/fpm/ /etc/php/8.6/fpm/
 
 RUN cp -a /etc/php/8.6/cli/conf.d/. /etc/php/8.6/fpm/conf.d/
 
-RUN ln -s /usr/local/sbin/php-fpm /usr/bin/php-fpm
+RUN ln -sf /usr/local/sbin/php-fpm /usr/sbin/php-fpm8.6 && \
+    ln -sf /usr/sbin/php-fpm8.6 /usr/bin/php-fpm
 RUN mkdir -p /run/php
 
 # FPM Socket Settings
