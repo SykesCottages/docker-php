@@ -1,0 +1,402 @@
+#!/bin/sh
+set -eu
+
+PHP_MAJOR_MINOR="$(php -r 'echo PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION;')"
+CONF_ROOT="/etc/php/${PHP_MAJOR_MINOR}"
+MODS_DIR="${CONF_ROOT}/mods-available"
+RELEASE_ENV="${CONF_ROOT}/release.env"
+MANIFESTS_DIR="${PHP_EXT_MANIFESTS_DIR:-/usr/local/share/php-ext-install/manifests}"
+
+CONFIGURE_ARGS=""
+PRIORITY=""
+ENABLE=1
+INSTALL_DEPS=1
+KEEP_DEPS=0
+SAPI_FILTER="ALL"
+
+usage() {
+    cat >&2 <<EOF
+Usage: php-ext-install [options] <extension> [<extension>...]
+
+Install bundled PHP ${PHP_MAJOR_MINOR} core extensions or PECL extensions using
+per-extension manifests in ${MANIFESTS_DIR}/, automatically install required
+system dependencies (and clean up temporary -dev packages afterward), register
+them in /etc/php/${PHP_MAJOR_MINOR}/mods-available/, and enable them via
+phpenmod by default.
+
+Options:
+  --configure-args="..."   Override ./configure arguments for bundled extensions
+  --priority=NN            Override INI load priority (default: from manifest or 20)
+  --no-enable              Do not run phpenmod after installing
+  --no-deps                Do not automatically install/remove apt dependencies
+  --keep-deps              Keep newly installed -dev apt packages after building
+  --list                   List extensions with manifests for PHP ${PHP_MAJOR_MINOR}
+  -s SAPI                  Enable only for the specified SAPI (default: ALL)
+  -h, --help               Show this help message
+
+Examples:
+  php-ext-install redis apcu
+  php-ext-install gd pdo_pgsql
+  php-ext-install xdebug
+  php-ext-install --no-enable protobuf
+  php-ext-install --list
+EOF
+    exit 1
+}
+
+list_manifests() {
+    php -r '
+        $dir = $argv[1];
+        $ver = $argv[2];
+        $files = glob($dir . "/*.manifest.json");
+        sort($files);
+        printf("%-18s %-10s %-8s %s\n", "EXTENSION", "SOURCE", "PRIORITY", "BUILD DEPS");
+        foreach ($files as $file) {
+            $m = json_decode(file_get_contents($file), true);
+            if (!is_array($m)) { continue; }
+            $versions = $m["versions"] ?? [];
+            if (!empty($versions) && !in_array($ver, $versions, true)) { continue; }
+            $src = is_array($m["source"] ?? null) ? ($m["source"][$ver] ?? "pecl") : ($m["source"] ?? "pecl");
+            $prio = $m["priority"] ?? 20;
+            $deps = implode(", ", $m["dependencies"]["build"] ?? []);
+            printf("%-18s %-10s %-8s %s\n", $m["extension"], $src, $prio, $deps ?: "-");
+        }
+    ' "$MANIFESTS_DIR" "$PHP_MAJOR_MINOR"
+}
+
+EXTS=""
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --configure-args=*)
+            CONFIGURE_ARGS="${1#*=}"
+            ;;
+        --configure-args)
+            shift
+            CONFIGURE_ARGS="$1"
+            ;;
+        --priority=*)
+            PRIORITY="${1#*=}"
+            ;;
+        --priority)
+            shift
+            PRIORITY="$1"
+            ;;
+        --no-enable)
+            ENABLE=0
+            ;;
+        --no-deps)
+            INSTALL_DEPS=0
+            ;;
+        --keep-deps)
+            KEEP_DEPS=1
+            ;;
+        --list)
+            list_manifests
+            exit 0
+            ;;
+        -s)
+            shift
+            SAPI_FILTER="$1"
+            ;;
+        -h|--help)
+            usage
+            ;;
+        -*)
+            echo "Error: Unknown option '$1'" >&2
+            usage
+            ;;
+        *)
+            EXTS="${EXTS} $1"
+            ;;
+    esac
+    shift
+done
+
+if [ -z "$EXTS" ]; then
+    usage
+fi
+
+if [ -n "$PRIORITY" ]; then
+    case "$PRIORITY" in
+        *[!0-9]*)
+            echo "Error: Invalid --priority '${PRIORITY}' (must be digits only)." >&2
+            exit 1
+            ;;
+    esac
+fi
+
+if [ "$SAPI_FILTER" != "ALL" ]; then
+    case "$SAPI_FILTER" in
+        ''|*[!a-zA-Z0-9_-]*)
+            echo "Error: Invalid SAPI '${SAPI_FILTER}'." >&2
+            exit 1
+            ;;
+    esac
+fi
+
+EXT_DIR="$(php-config --extension-dir)"
+SRC_TMP=""
+APT_UPDATED=0
+TEMP_DEV_PKGS=""
+RUNTIME_DEP_PKGS=""
+
+cleanup() {
+    if [ -n "$SRC_TMP" ] && [ -d "$SRC_TMP" ]; then
+        rm -rf "$SRC_TMP"
+    fi
+    rm -rf /tmp/pear
+
+    if [ -n "$RUNTIME_DEP_PKGS" ]; then
+        # shellcheck disable=SC2086
+        apt-mark manual $RUNTIME_DEP_PKGS >/dev/null 2>&1 || true
+    fi
+
+    if [ "$KEEP_DEPS" -eq 0 ] && [ -n "$TEMP_DEV_PKGS" ]; then
+        # shellcheck disable=SC2086
+        DEBIAN_FRONTEND=noninteractive apt-get purge -y -q --auto-remove $TEMP_DEV_PKGS || true
+    fi
+
+    if [ "$APT_UPDATED" -eq 1 ]; then
+        apt-get autoclean -y -q >/dev/null 2>&1 || true
+        rm -rf /var/lib/apt/lists/*
+    fi
+}
+trap cleanup EXIT
+
+is_pkg_installed() {
+    dpkg-query -W -f='${Status}\n' "$1" 2>/dev/null | grep -q "install ok installed"
+}
+
+manifest_path() {
+    echo "${MANIFESTS_DIR}/$1.manifest.json"
+}
+
+# Read a field from an extension's manifest JSON using PHP's built-in json_decode.
+# Fields: supported, source, priority, build_deps, runtime_deps, configure_args
+read_manifest() {
+    mod="$1"
+    field="$2"
+    mfile="$(manifest_path "$mod")"
+    [ -f "$mfile" ] || return 0
+
+    php -r '
+        $m = json_decode(file_get_contents($argv[1]), true);
+        if (!is_array($m)) { exit(1); }
+        $ver = $argv[2];
+        $field = $argv[3];
+        switch ($field) {
+            case "supported":
+                $versions = $m["versions"] ?? [];
+                echo (empty($versions) || in_array($ver, $versions, true)) ? "yes" : "no";
+                break;
+            case "source":
+                $src = $m["source"] ?? "pecl";
+                echo is_array($src) ? ($src[$ver] ?? "pecl") : $src;
+                break;
+            case "priority":
+                echo (string) ($m["priority"] ?? 20);
+                break;
+            case "build_deps":
+                echo implode(" ", $m["dependencies"]["build"] ?? []);
+                break;
+            case "runtime_deps":
+                echo implode(" ", $m["dependencies"]["runtime"] ?? []);
+                break;
+            case "configure_args":
+                echo implode(" ", $m["configure_args"] ?? []);
+                break;
+        }
+    ' "$mfile" "$PHP_MAJOR_MINOR" "$field"
+}
+
+validate_and_install_deps() {
+    missing_build=""
+    missing_runtime=""
+
+    for spec in $EXTS; do
+        case "$spec" in
+            *..*|*[\;\|\&\`\$\(\)\{\}\<\>\*\?\[]*)
+                echo "Error: Invalid extension specification '${spec}'." >&2
+                exit 1
+                ;;
+        esac
+        mod_name="${spec%%-*}"
+        mod_name="${mod_name##*/}"
+        case "$mod_name" in
+            ''|*[!a-zA-Z0-9_]*)
+                echo "Error: Invalid extension name '${mod_name}'." >&2
+                exit 1
+                ;;
+        esac
+        mfile="$(manifest_path "$mod_name")"
+
+        if [ -f "$mfile" ]; then
+            if [ "$(read_manifest "$mod_name" supported)" != "yes" ]; then
+                echo "Error: Extension '${mod_name}' is not supported on PHP ${PHP_MAJOR_MINOR} (per ${mfile})." >&2
+                exit 1
+            fi
+        fi
+
+        [ "$INSTALL_DEPS" -eq 1 ] || continue
+
+        # Skip dependency installation if the extension is already compiled and no specific version was requested
+        if [ "$spec" = "$mod_name" ] && [ -f "${EXT_DIR}/${mod_name}.so" ]; then
+            continue
+        fi
+
+        [ -f "$mfile" ] || continue
+
+        for pkg in $(read_manifest "$mod_name" build_deps); do
+            if ! is_pkg_installed "$pkg"; then
+                case " $missing_build " in
+                    *" $pkg "*) ;;
+                    *) missing_build="${missing_build} ${pkg}" ;;
+                esac
+            fi
+        done
+
+        for pkg in $(read_manifest "$mod_name" runtime_deps); do
+            if ! is_pkg_installed "$pkg"; then
+                case " $missing_runtime " in
+                    *" $pkg "*) ;;
+                    *) missing_runtime="${missing_runtime} ${pkg}" ;;
+                esac
+            fi
+        done
+    done
+
+    all_missing="${missing_build}${missing_runtime}"
+    if [ -n "$all_missing" ]; then
+        if [ "$APT_UPDATED" -eq 0 ]; then
+            apt-get update -y -q
+            APT_UPDATED=1
+        fi
+        # shellcheck disable=SC2086
+        DEBIAN_FRONTEND=noninteractive apt-get install -y -q --no-install-recommends $all_missing
+        TEMP_DEV_PKGS="${TEMP_DEV_PKGS}${missing_build}"
+        RUNTIME_DEP_PKGS="${RUNTIME_DEP_PKGS}${missing_runtime}"
+    fi
+}
+
+preserve_runtime_libs() {
+    so_path="$1"
+    [ "$INSTALL_DEPS" -eq 1 ] && [ "$KEEP_DEPS" -eq 0 ] && [ -n "$TEMP_DEV_PKGS" ] || return 0
+
+    for lib in $(ldd "$so_path" 2>/dev/null | awk '/=> \//{print $3}'); do
+        real="$(readlink -f "$lib" 2>/dev/null || echo "$lib")"
+        pkg="$(dpkg-query -S "$real" "$lib" 2>/dev/null | head -n1 | cut -d: -f1 || true)"
+        [ -n "$pkg" ] || continue
+        case " $TEMP_DEV_PKGS " in
+            *" $pkg "*) continue ;;
+        esac
+        case " $RUNTIME_DEP_PKGS " in
+            *" $pkg "*) ;;
+            *) RUNTIME_DEP_PKGS="${RUNTIME_DEP_PKGS} ${pkg}" ;;
+        esac
+    done
+}
+
+ensure_php_source() {
+    if [ -n "$SRC_TMP" ] && [ -d "${SRC_TMP}/ext" ]; then
+        return
+    fi
+
+    if [ ! -f "$RELEASE_ENV" ]; then
+        echo "Error: Missing ${RELEASE_ENV}; cannot verify PHP source integrity." >&2
+        exit 1
+    fi
+
+    PHP_VERSION="$(awk -F= '$1 == "PHP_VERSION" {print $2; exit}' "$RELEASE_ENV")"
+    PHP_SHA256="$(awk -F= '$1 == "PHP_SHA256" {print $2; exit}' "$RELEASE_ENV")"
+
+    if ! printf '%s' "$PHP_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' || \
+       ! printf '%s' "$PHP_SHA256" | grep -Eq '^[0-9a-f]{64}$'; then
+        echo "Error: Invalid or incomplete metadata in ${RELEASE_ENV}." >&2
+        exit 1
+    fi
+
+    SRC_TMP="$(mktemp -d /tmp/php-src-XXXXXX)"
+    curl -fsSL "https://www.php.net/distributions/php-${PHP_VERSION}.tar.xz" -o "${SRC_TMP}/php.tar.xz"
+    echo "${PHP_SHA256}  ${SRC_TMP}/php.tar.xz" | sha256sum -c -
+    tar -xf "${SRC_TMP}/php.tar.xz" -C "$SRC_TMP" --strip-components=1
+    rm -f "${SRC_TMP}/php.tar.xz"
+}
+
+register_ext() {
+    mod_name="$1"
+    so_path="${EXT_DIR}/${mod_name}.so"
+
+    if [ ! -f "$so_path" ]; then
+        echo "Error: Expected compiled extension '${so_path}' was not found." >&2
+        exit 1
+    fi
+
+    strip --strip-unneeded "$so_path" 2>/dev/null || true
+    preserve_runtime_libs "$so_path"
+
+    ext_priority="$PRIORITY"
+    if [ -z "$ext_priority" ]; then
+        ext_priority="$(read_manifest "$mod_name" priority)"
+        ext_priority="${ext_priority:-20}"
+    fi
+    case "$ext_priority" in
+        ''|*[!0-9]*)
+            echo "Error: Invalid priority '${ext_priority}' for extension '${mod_name}'." >&2
+            exit 1
+            ;;
+    esac
+
+    directive="extension"
+    if nm -D "$so_path" 2>/dev/null | grep -q ' zend_extension_entry$'; then
+        directive="zend_extension"
+    fi
+
+    mkdir -p "$MODS_DIR"
+    cat > "${MODS_DIR}/${mod_name}.ini" <<EOF
+; priority=${ext_priority}
+${directive}=${mod_name}.so
+EOF
+
+    if [ "$ENABLE" -eq 1 ]; then
+        phpenmod -s "$SAPI_FILTER" "$mod_name"
+    fi
+}
+
+validate_and_install_deps
+
+PECL_UPDATED=0
+
+for spec in $EXTS; do
+    # Strip optional PECL version suffix (e.g. redis-6.1.0 -> redis)
+    mod_name="${spec%%-*}"
+    # Strip optional channel prefix (e.g. channel://.../foo -> foo)
+    mod_name="${mod_name##*/}"
+    ext_source="$(read_manifest "$mod_name" source)"
+    ext_source="${ext_source:-pecl}"
+
+    if [ "$spec" = "$mod_name" ] && [ -f "${EXT_DIR}/${mod_name}.so" ]; then
+        echo "Extension '${mod_name}' is already compiled at ${EXT_DIR}/${mod_name}.so; enabling."
+    elif [ "$spec" = "$mod_name" ] && [ "$ext_source" = "bundled" ]; then
+        ensure_php_source
+        ext_configure_args="$CONFIGURE_ARGS"
+        if [ -z "$ext_configure_args" ]; then
+            ext_configure_args="$(read_manifest "$mod_name" configure_args)"
+        fi
+        (
+            cd "${SRC_TMP}/ext/${mod_name}"
+            phpize
+            # shellcheck disable=SC2086
+            ./configure $ext_configure_args
+            make -j"$(nproc)"
+            make install
+        )
+    else
+        if [ "$PECL_UPDATED" -eq 0 ]; then
+            pecl channel-update pecl.php.net || true
+            PECL_UPDATED=1
+        fi
+        yes '' | pecl install -f "$spec"
+    fi
+
+    register_ext "$mod_name"
+done

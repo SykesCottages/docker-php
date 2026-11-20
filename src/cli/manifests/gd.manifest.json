@@ -1,0 +1,27 @@
+{
+    "extension": "gd",
+    "source": "bundled",
+    "versions": [
+        "8.2",
+        "8.3",
+        "8.4",
+        "8.5",
+        "8.6"
+    ],
+    "priority": 20,
+    "dependencies": {
+        "build": [
+            "libfreetype-dev",
+            "libjpeg-dev",
+            "libpng-dev",
+            "libwebp-dev",
+            "zlib1g-dev"
+        ],
+        "runtime": []
+    },
+    "configure_args": [
+        "--with-freetype",
+        "--with-jpeg",
+        "--with-webp"
+    ]
+}

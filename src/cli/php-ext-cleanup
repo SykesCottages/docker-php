@@ -1,0 +1,27 @@
+#!/bin/sh
+set -eu
+
+# Remove build toolchains and PHP build headers for hardened production images.
+# Call this at the end of a downstream Dockerfile after all php-ext-install steps.
+
+DEBIAN_FRONTEND=noninteractive apt-get purge -y -q --auto-remove \
+    autoconf \
+    build-essential \
+    pkg-config || true
+
+apt-get autoclean -y -q >/dev/null 2>&1 || true
+rm -rf /var/lib/apt/lists/* \
+    /usr/local/include/php \
+    /usr/local/bin/phpize \
+    /usr/bin/phpize \
+    /usr/bin/phpize[0-9]* \
+    /usr/local/bin/php-config \
+    /usr/bin/php-config \
+    /usr/bin/php-config[0-9]* \
+    /usr/local/bin/pecl \
+    /usr/bin/pecl \
+    /usr/local/bin/pear \
+    /usr/bin/pear \
+    /usr/local/bin/php-ext-install \
+    /usr/local/share/php-ext-install \
+    /tmp/pear
