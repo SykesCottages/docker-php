@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSIONS=($(find . -maxdepth 1 -type d | grep -E '^\./[0-9]+\.[0-9]+$' | sort | sed 's/\.\///'))
+VERSIONS=($(find . -maxdepth 1 -type d | grep -E '^\./[0-9]+\.[0-9]+(-src)?$' | sort | sed 's/\.\///'))
 for VERSION in "${VERSIONS[@]}"
 do
   docker-compose -f $VERSION/cli/docker-compose.test.yml build --no-cache &&

@@ -1,0 +1,173 @@
+#!/bin/sh
+set -eu
+
+PHP_MAJOR_MINOR="8.5"
+CONF_ROOT="/etc/php/${PHP_MAJOR_MINOR}"
+MODS_DIR="${CONF_ROOT}/mods-available"
+RELEASE_ENV="${CONF_ROOT}/release.env"
+
+CONFIGURE_ARGS=""
+PRIORITY="20"
+ENABLE=1
+SAPI_FILTER="ALL"
+
+usage() {
+    cat >&2 <<'EOF'
+Usage: php-ext-install [options] <extension> [<extension>...]
+
+Install bundled PHP 8.5 core extensions or PECL extensions and register them
+in /etc/php/8.5/mods-available/ (enabled automatically via phpenmod).
+
+Options:
+  --configure-args="..."   Extra ./configure arguments for core extensions
+  --priority=NN            INI load priority (default: 20)
+  --no-enable              Do not run phpenmod after installing
+  -s SAPI                  Enable only for the specified SAPI (default: ALL)
+  -h, --help               Show this help message
+
+Examples:
+  php-ext-install redis apcu
+  php-ext-install xdebug
+  php-ext-install --configure-args="--with-freetype --with-jpeg" gd
+  php-ext-install --no-enable protobuf
+EOF
+    exit 1
+}
+
+EXTS=""
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --configure-args=*)
+            CONFIGURE_ARGS="${1#*=}"
+            ;;
+        --configure-args)
+            shift
+            CONFIGURE_ARGS="$1"
+            ;;
+        --priority=*)
+            PRIORITY="${1#*=}"
+            ;;
+        --priority)
+            shift
+            PRIORITY="$1"
+            ;;
+        --no-enable)
+            ENABLE=0
+            ;;
+        -s)
+            shift
+            SAPI_FILTER="$1"
+            ;;
+        -h|--help)
+            usage
+            ;;
+        -*)
+            echo "Error: Unknown option '$1'" >&2
+            usage
+            ;;
+        *)
+            EXTS="${EXTS} $1"
+            ;;
+    esac
+    shift
+done
+
+if [ -z "$EXTS" ]; then
+    usage
+fi
+
+EXT_DIR="$(php-config --extension-dir)"
+SRC_TMP=""
+
+cleanup() {
+    if [ -n "$SRC_TMP" ] && [ -d "$SRC_TMP" ]; then
+        rm -rf "$SRC_TMP"
+    fi
+}
+trap cleanup EXIT
+
+ensure_php_source() {
+    if [ -n "$SRC_TMP" ] && [ -d "${SRC_TMP}/ext" ]; then
+        return
+    fi
+
+    if [ -f "$RELEASE_ENV" ]; then
+        . "$RELEASE_ENV"
+    else
+        PHP_VERSION="$(php -r 'echo PHP_VERSION;')"
+        PHP_SHA256=""
+    fi
+
+    SRC_TMP="$(mktemp -d /tmp/php-src-XXXXXX)"
+    curl -fsSL "https://www.php.net/distributions/php-${PHP_VERSION}.tar.xz" -o "${SRC_TMP}/php.tar.xz"
+    if [ -n "${PHP_SHA256:-}" ]; then
+        echo "${PHP_SHA256}  ${SRC_TMP}/php.tar.xz" | sha256sum -c -
+    fi
+    tar -xf "${SRC_TMP}/php.tar.xz" -C "$SRC_TMP" --strip-components=1
+    rm -f "${SRC_TMP}/php.tar.xz"
+}
+
+is_bundled_ext() {
+    case "$1" in
+        bcmath|bz2|calendar|ctype|curl|dba|dl_test|dom|enchant|exif|ffi|fileinfo|filter|ftp|gd|gettext|gmp|hash|iconv|intl|json|ldap|lexbor|mbstring|mysqli|mysqlnd|odbc|openssl|pcntl|pdo|pdo_dblib|pdo_firebird|pdo_mysql|pdo_odbc|pdo_pgsql|pdo_sqlite|pgsql|phar|posix|random|readline|reflection|session|shmop|simplexml|snmp|soap|sockets|sodium|spl|sqlite3|standard|sysvmsg|sysvsem|sysvshm|tidy|tokenizer|uri|xml|xmlreader|xmlwriter|xsl|zend_test|zip|zlib)
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
+register_ext() {
+    mod_name="$1"
+    so_path="${EXT_DIR}/${mod_name}.so"
+
+    if [ ! -f "$so_path" ]; then
+        echo "Error: Expected compiled extension '${so_path}' was not found." >&2
+        exit 1
+    fi
+
+    directive="extension"
+    if nm -D "$so_path" 2>/dev/null | grep -q ' zend_extension_entry$'; then
+        directive="zend_extension"
+    fi
+
+    mkdir -p "$MODS_DIR"
+    cat > "${MODS_DIR}/${mod_name}.ini" <<EOF
+; priority=${PRIORITY}
+${directive}=${mod_name}.so
+EOF
+
+    if [ "$ENABLE" -eq 1 ]; then
+        phpenmod -s "$SAPI_FILTER" "$mod_name"
+    fi
+}
+
+PECL_UPDATED=0
+
+for spec in $EXTS; do
+    # Strip optional PECL version suffix (e.g. redis-6.1.0 -> redis)
+    mod_name="${spec%%-*}"
+    # Strip optional channel prefix (e.g. channel://.../foo -> foo)
+    mod_name="${mod_name##*/}"
+
+    if [ "$spec" = "$mod_name" ] && is_bundled_ext "$mod_name"; then
+        ensure_php_source
+        (
+            cd "${SRC_TMP}/ext/${mod_name}"
+            phpize
+            # shellcheck disable=SC2086
+            ./configure $CONFIGURE_ARGS
+            make -j"$(nproc)"
+            make install
+        )
+    else
+        if [ "$PECL_UPDATED" -eq 0 ]; then
+            pecl channel-update pecl.php.net || true
+            PECL_UPDATED=1
+        fi
+        yes '' | pecl install "$spec"
+    fi
+
+    register_ext "$mod_name"
+done
