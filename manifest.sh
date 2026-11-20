@@ -19,7 +19,7 @@ do
 done
 
 # Update the PHP specific versions manifests
-VERSIONS=($(find . -maxdepth 1 -type d | grep -E '^\./[0-9]+\.[0-9]+$' | sort | sed 's/\.\///'))
+VERSIONS=($(find . -maxdepth 1 -type d | grep -E '^\./[0-9]+\.[0-9]+(-src)?$' | sort | sed 's/\.\///'))
 for VERSION in "${VERSIONS[@]}"
 do
   TAG="sykescottages/php:${VERSION}-cli"

@@ -7,7 +7,8 @@ do
   docker run --pull always -it sykescottages/php:${VERSION}-cli bash -c "apt -qq list | tail -n+2" | tail -n+4 > $VERSION/cli/aptitude-itinerary
 done
 
-for VERSION in "${VERSIONS[@]}"
+ALL_VERSIONS=($(find . -maxdepth 1 -type d | grep -E '^\./[0-9]+\.[0-9]+(-src)?$' | sort | sed 's/\.\///'))
+for VERSION in "${ALL_VERSIONS[@]}"
 do
   docker run --pull always sykescottages/php:${VERSION}-cli -v|grep -E "^PHP "
 done

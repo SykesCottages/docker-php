@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -uo pipefail
 
-VERSIONS=("7.4" "8.0" "8.1" "8.2" "8.3" "8.4" "8.5" "8.6")
+VERSIONS=("7.4" "8.0" "8.1" "8.2" "8.2-src" "8.3" "8.3-src" "8.4" "8.4-src" "8.5" "8.5-src" "8.6-src")
 VARIANTS=("cli" "fpm")
 ARCHS=("amd64" "arm64")
 
@@ -12,8 +12,9 @@ printf "%-38s | %-10s | %-22s | %-8s\n" "IMAGE" "VERSION" "BUILT" "STATUS"
 printf "%.0s-" {1..88}; echo
 
 for VERSION in "${VERSIONS[@]}"; do
+  PHP_MINOR="${VERSION%-src}"
   MIN_SAFE=""
-  case "$VERSION" in
+  case "$PHP_MINOR" in
     8.2) MIN_SAFE="8.2.36" ;;
     8.3) MIN_SAFE="8.3.37" ;;
     8.4) MIN_SAFE="8.4.28" ;;
@@ -22,7 +23,7 @@ for VERSION in "${VERSIONS[@]}"; do
   esac
 
   if [[ -n "$MIN_SAFE" ]]; then
-    UPSTREAM=$(curl -fsSL "https://www.php.net/releases/index.php?json&version=${VERSION}" 2>/dev/null | jq -r '.version // empty' || true)
+    UPSTREAM=$(curl -fsSL "https://www.php.net/releases/index.php?json&version=${PHP_MINOR}" 2>/dev/null | jq -r '.version // empty' || true)
     if [[ -n "$UPSTREAM" && "$(printf '%s\n' "$MIN_SAFE" "$UPSTREAM" | sort -V | tail -n1)" == "$UPSTREAM" ]]; then
       MIN_SAFE="$UPSTREAM"
     fi
@@ -75,7 +76,7 @@ except Exception:
       if [[ "$FIRST_LINE" != *"(${EXPECTED_SAPI})"* ]]; then
         STATUS="❌ FAIL"
         REASON="wrong SAPI"
-      elif [[ -z "$FULL_VERSION" || "$FULL_VERSION" != "${VERSION}."* ]]; then
+      elif [[ -z "$FULL_VERSION" || "$FULL_VERSION" != "${PHP_MINOR}."* ]]; then
         STATUS="❌ FAIL"
         REASON="version mismatch"
       elif (( BUILT_YMD < 20261021 )); then

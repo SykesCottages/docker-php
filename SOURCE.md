@@ -1,15 +1,20 @@
-# PHP 8.6 Docker Images
+# Source-Built PHP Docker Images (`-src`)
 
-Unlike PHP 8.5 and earlier, the PHP 8.6 images (`sykescottages/php:8.6-cli` and `sykescottages/php:8.6-fpm`) are built directly from official PHP source on top of `sykescottages/base:ubuntu-24-04` without `ppa:ondrej/php`. Each build automatically resolves and verifies the latest `8.6.x` patch release from php.net.
+The `-src` PHP images (`8.2-src` through `8.6-src`) are built directly from official PHP source on top of `sykescottages/base:ubuntu-24-04` without `sury`/`ondrej` PHP apt repositories. Each build automatically resolves and SHA-256-verifies the latest patch release for its minor version from php.net.
 
-Because `ondrej` apt packages (`php8.6-*`) are not used, PHP 8.6 provides `php-ext-install`, `phpenmod`, and `phpdismod` for installing and managing extensions.
+For PHP 8.2–8.5, these `-src` tags are published alongside the existing apt-based tags (`8.x-cli` / `8.x-fpm`) so downstream images that still run `apt-get install php8.x-*` continue to work unchanged.
+
+Because apt PHP packages (`php8.x-*`) are not used, all `-src` images provide `php-ext-install`, `phpenmod`, and `phpdismod` for installing and managing extensions.
 
 ## Available Tags
 
-- `sykescottages/php:8.6-cli` (CLI + Composer)
-- `sykescottages/php:8.6-fpm` (extends `8.6-cli` with PHP-FPM listening on port `9000`)
+- `sykescottages/php:8.2-src-cli` / `sykescottages/php:8.2-src-fpm`
+- `sykescottages/php:8.3-src-cli` / `sykescottages/php:8.3-src-fpm`
+- `sykescottages/php:8.4-src-cli` / `sykescottages/php:8.4-src-fpm`
+- `sykescottages/php:8.5-src-cli` / `sykescottages/php:8.5-src-fpm`
+- `sykescottages/php:8.6-src-cli` / `sykescottages/php:8.6-src-fpm`
 
-Both tags support `linux/amd64` and `linux/arm64/v8`.
+All tags support `linux/amd64` and `linux/arm64/v8`. Each `-src-fpm` image extends its corresponding `-src-cli` image with PHP-FPM listening on port `9000`.
 
 ## Pre-installed Extensions
 
@@ -40,12 +45,14 @@ Both tags support `linux/amd64` and `linux/arm64/v8`.
 
 `phpize`, `php-config`, `pecl`, `autoconf`, `build-essential`, and `pkg-config` are also included so extensions can be compiled directly in downstream Dockerfiles.
 
-## Using PHP 8.6 in a Dockerfile
+## Using a `-src` Image in a Dockerfile
+
+(Substitute `8.2`, `8.3`, `8.4`, `8.5`, or `8.6` for `8.6` below.)
 
 ### CLI image
 
 ```dockerfile
-FROM sykescottages/php:8.6-cli
+FROM sykescottages/php:8.6-src-cli
 
 # Install PECL extensions (automatically enabled for CLI)
 RUN php-ext-install redis apcu
@@ -57,7 +64,7 @@ COPY . /app
 ### FPM image (with system libraries & per-SAPI extensions)
 
 ```dockerfile
-FROM sykescottages/php:8.6-fpm
+FROM sykescottages/php:8.6-src-fpm
 
 # Install any native C libraries required by the extensions you want to compile
 RUN apt-get update && \
@@ -83,9 +90,9 @@ COPY php.ini /etc/php/8.6/cli/conf.d/99-custom.ini
 
 ## Installing Extensions with `php-ext-install`
 
-`php-ext-install` supports both **bundled PHP 8.6 core extensions** (e.g. `gd`, `pdo_pgsql`, `pgsql`, `gmp`, `bz2`, `ldap`, `dba`) and **PECL extensions** (e.g. `redis`, `apcu`, `xdebug`, `igbinary`, `memcached`, `imagick`, `pcov`).
+`php-ext-install` supports both **bundled PHP core extensions** (e.g. `gd`, `pdo_pgsql`, `pgsql`, `gmp`, `bz2`, `ldap`, `dba`) and **PECL extensions** (e.g. `redis`, `apcu`, `xdebug`, `igbinary`, `memcached`, `imagick`, `pcov`).
 
-When installing a bundled core extension, it downloads and SHA-256-verifies the exact `8.6.x` source archive matching the image (from `/etc/php/8.6/release.env`), compiles the extension, and removes the temporary source directory. It automatically detects `extension=` vs `zend_extension=`, writes `/etc/php/8.6/mods-available/<ext>.ini`, and enables the module via `phpenmod`.
+When installing a bundled core extension, it downloads and SHA-256-verifies the exact `8.x.y` source archive matching the image (from `/etc/php/<major.minor>/release.env`), compiles the extension, and removes the temporary source directory. It automatically detects `extension=` vs `zend_extension=`, writes `/etc/php/<major.minor>/mods-available/<ext>.ini`, and enables the module via `phpenmod`.
 
 ```shell
 # Install one or more extensions
@@ -109,7 +116,7 @@ php-ext-install -s cli xdebug
 
 ## Managing Modules with `phpenmod` and `phpdismod`
 
-PHP 8.6 includes `phpenmod` and `phpdismod` scoped to `/etc/php/8.6/`:
+Each `-src` image includes `phpenmod` and `phpdismod` scoped to `/etc/php/<major.minor>/`:
 
 ```shell
 # Enable or disable a module across all installed SAPIs (cli, and fpm in the FPM image)
@@ -126,13 +133,15 @@ phpenmod decimal/30
 
 ## Configuration Paths
 
-- **CLI `php.ini`:** `/etc/php/8.6/cli/php.ini`
-- **CLI scan dir:** `/etc/php/8.6/cli/conf.d/`
-- **FPM `php.ini`:** `/etc/php/8.6/fpm/php.ini`
-- **FPM scan dir:** `/etc/php/8.6/fpm/conf.d/`
-- **FPM config:** `/etc/php/8.6/fpm/php-fpm.conf` and `/etc/php/8.6/fpm/pool.d/www.conf`
-- **Available modules:** `/etc/php/8.6/mods-available/`
-- **Pinned release metadata:** `/etc/php/8.6/release.env`
+(Where `<major.minor>` is `8.2`, `8.3`, `8.4`, `8.5`, or `8.6`.)
+
+- **CLI `php.ini`:** `/etc/php/<major.minor>/cli/php.ini`
+- **CLI scan dir:** `/etc/php/<major.minor>/cli/conf.d/`
+- **FPM `php.ini`:** `/etc/php/<major.minor>/fpm/php.ini`
+- **FPM scan dir:** `/etc/php/<major.minor>/fpm/conf.d/`
+- **FPM config:** `/etc/php/<major.minor>/fpm/php-fpm.conf` and `/etc/php/<major.minor>/fpm/pool.d/www.conf`
+- **Available modules:** `/etc/php/<major.minor>/mods-available/`
+- **Pinned release metadata:** `/etc/php/<major.minor>/release.env`
 
 ## Security & Logging Defaults
 
