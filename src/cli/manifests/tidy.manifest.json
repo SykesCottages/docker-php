@@ -1,0 +1,19 @@
+{
+    "extension": "tidy",
+    "source": "bundled",
+    "versions": [
+        "8.2",
+        "8.3",
+        "8.4",
+        "8.5",
+        "8.6"
+    ],
+    "priority": 20,
+    "dependencies": {
+        "build": [
+            "libtidy-dev"
+        ],
+        "runtime": []
+    },
+    "configure_args": []
+}

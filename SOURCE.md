@@ -63,23 +63,14 @@ WORKDIR /app
 COPY . /app
 ```
 
-### FPM image (with system libraries & per-SAPI extensions)
+### FPM image (with automatic system dependencies & per-SAPI extensions)
 
 ```dockerfile
 FROM sykescottages/php:8.6-src-fpm
 
-# Install any native C libraries required by the extensions you want to compile
-RUN apt-get update && \
-    apt-get install -y -q --no-install-recommends \
-        libfreetype6-dev \
-        libjpeg-dev \
-        libpng-dev \
-        libpq-dev && \
-    php-ext-install --configure-args="--with-freetype --with-jpeg" gd && \
-    php-ext-install pdo_pgsql redis && \
-    apt-get autoremove -y -q && \
-    apt-get autoclean -y -q && \
-    rm -rf /var/lib/apt/lists/*
+# Automatically installs required Ubuntu -dev dependencies, compiles, enables,
+# preserves runtime shared libraries, and cleans up temporary -dev packages
+RUN php-ext-install gd pdo_pgsql redis
 
 # Install xdebug without enabling it globally, then enable it for CLI only
 RUN php-ext-install --no-enable xdebug && \
@@ -92,18 +83,22 @@ COPY php.ini /etc/php/8.6/cli/conf.d/99-custom.ini
 
 ## Installing Extensions with `php-ext-install`
 
-`php-ext-install` supports both **bundled PHP core extensions** (e.g. `gd`, `pdo_pgsql`, `pgsql`, `gmp`, `bz2`, `ldap`, `dba`) and **PECL extensions** (e.g. `redis`, `apcu`, `xdebug`, `igbinary`, `memcached`, `imagick`, `pcov`).
+`php-ext-install` supports both **bundled PHP core extensions** (e.g. `gd`, `pdo_pgsql`, `pgsql`, `gmp`, `bz2`, `ldap`, `dba`, `tidy`, `odbc`, `pdo_dblib`) and **PECL extensions** (e.g. `redis`, `apcu`, `xdebug`, `igbinary`, `memcached`, `imagick`, `pcov`, `yaml`, `amqp`, `rdkafka`, `mongodb`).
 
-When installing a bundled core extension, it downloads and SHA-256-verifies the exact `8.x.y` source archive matching the image (from `/etc/php/<major.minor>/release.env`), compiles the extension, and removes the temporary source directory. It automatically detects `extension=` vs `zend_extension=`, writes `/etc/php/<major.minor>/mods-available/<ext>.ini`, and enables the module via `phpenmod`.
+By default, `php-ext-install`:
+1. Automatically installs any required Ubuntu `-dev` apt packages for the requested extensions.
+2. Downloads and SHA-256-verifies the exact `8.x.y` source archive matching the image (from `/etc/php/<major.minor>/release.env`) when building bundled core extensions, using sensible default `./configure` flags (e.g. `--with-freetype --with-jpeg --with-webp` for `gd`).
+3. Detects `extension=` vs `zend_extension=`, writes `/etc/php/<major.minor>/mods-available/<ext>.ini`, and **enables the extension by default** via `phpenmod`.
+4. Preserves runtime shared libraries linked by the compiled `.so` and purges newly installed temporary `-dev` packages and apt lists afterward.
 
 ```shell
-# Install one or more extensions
-php-ext-install redis apcu
+# Install and enable one or more extensions (system deps handled automatically)
+php-ext-install gd pdo_pgsql redis apcu
 
 # Pin a specific PECL version
 php-ext-install redis-6.1.0
 
-# Pass ./configure flags for bundled core extensions
+# Override ./configure flags for bundled core extensions
 php-ext-install --configure-args="--with-freetype --with-jpeg" gd
 
 # Set custom INI load priority (default: 20)
@@ -114,7 +109,16 @@ php-ext-install --no-enable xdebug
 
 # Install and enable for a single SAPI only
 php-ext-install -s cli xdebug
+
+# Skip automatic apt dependency management or keep newly installed -dev packages
+php-ext-install --no-deps myext
+php-ext-install --keep-deps gd
+
+# List all extensions with manifests for the current PHP version
+php-ext-install --list
 ```
+
+Extension manifests live in `src/cli/manifests/<extension>.manifest.json` (installed to `/usr/local/share/php-ext-install/manifests/` inside the image) and declare supported PHP versions, source (`bundled` or `pecl`), INI priority, Ubuntu build/runtime dependencies, and default `./configure` flags. Unlisted PECL extensions still fall back to `pecl install`.
 
 ## Managing Modules with `phpenmod` and `phpdismod`
 

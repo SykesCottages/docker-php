@@ -19,7 +19,10 @@ do
 done
 
 # Update the PHP specific versions manifests
-VERSIONS=($(find . -maxdepth 1 -type d | grep -E '^\./[0-9]+\.[0-9]+(-src)?$' | sort | sed 's/\.\///'))
+VERSIONS=($(find . -maxdepth 1 -type d | grep -E '^\./[0-9]+\.[0-9]+$' | sort | sed 's/\.\///'))
+while IFS= read -r SRC_VERSION; do
+  [ -n "$SRC_VERSION" ] && VERSIONS+=("${SRC_VERSION}-src")
+done < src/versions
 for VERSION in "${VERSIONS[@]}"
 do
   TAG="sykescottages/php:${VERSION}-cli"

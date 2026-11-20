@@ -1,0 +1,12 @@
+services:
+    sut:
+        build:
+            context: .
+            args:
+                PHP_VERSION: ${PHP_VERSION:-8.6}
+                ARCH: ${ARCH:-amd64}
+        environment:
+            - PHP_VERSION=${PHP_VERSION:-8.6}
+        command: /tests/run_tests.sh
+        volumes:
+            - ./run_tests.sh:/tests/run_tests.sh
