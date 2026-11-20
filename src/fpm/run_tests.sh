@@ -52,7 +52,20 @@ itShouldToggleModulesWithPhpenmodAndPhpdismod() {
   fi
 }
 
+itShouldHardenFpmDefaults() {
+  php -c "/etc/php/${PHP_VERSION}/fpm/php.ini" -r 'exit(!ini_get("expose_php") && !ini_get("cgi.fix_pathinfo") ? 0 : 1);'
+  if [ $? -ne 0 ]; then
+    echo "Error: FPM expose_php or cgi.fix_pathinfo is not Off." >&2
+    exit 1
+  fi
+  if ! grep -Eq '^security\.limit_extensions = \.php$' "/etc/php/${PHP_VERSION}/fpm/pool.d/www.conf"; then
+    echo "Error: FPM security.limit_extensions is not set to .php." >&2
+    exit 1
+  fi
+}
+
 itShouldCheckThatAllInstalledSoftwareExists
+itShouldHardenFpmDefaults
 itShouldDisableSessionUploadProgress
 itShouldDisableFatalErrorBacktraces
 itShouldToggleModulesWithPhpenmodAndPhpdismod

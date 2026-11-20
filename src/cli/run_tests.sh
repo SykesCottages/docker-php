@@ -10,6 +10,7 @@ itShouldCheckThatAllInstalledSoftwareExists() {
     doesCommandExist phpenmod
     doesCommandExist phpdismod
     doesCommandExist php-ext-install
+    doesCommandExist php-ext-cleanup
     doesExecutablePathExist /usr/bin/php
     doesExecutablePathExist "/usr/bin/php${PHP_VERSION}"
 }
@@ -99,10 +100,19 @@ itShouldSetUnlimitedCliMemoryLimit() {
   fi
 }
 
+itShouldDisableExposePhp() {
+  php -r 'exit(ini_get("expose_php") ? 1 : 0);'
+  if [ $? -ne 0 ]; then
+    echo "Error: expose_php is not Off." >&2
+    exit 1
+  fi
+}
+
 itShouldCheckThatAllInstalledSoftwareExists
 itShouldCheckThatAllPhpModulesExists
 itShouldMatchTheDesiredVersionOfPhp
 itShouldSetUnlimitedCliMemoryLimit
+itShouldDisableExposePhp
 itShouldDisableSessionUploadProgress
 itShouldDisableFatalErrorBacktraces
 itShouldToggleModulesWithPhpenmodAndPhpdismod

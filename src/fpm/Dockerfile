@@ -26,9 +26,13 @@ RUN apt-get update -y && \
 
 RUN set -eux; \
     PHP_MINOR="${PHP_VERSION}"; \
-    . /etc/php/${PHP_MINOR}/release.env; \
+    RELEASE_ENV="/etc/php/${PHP_MINOR}/release.env"; \
+    PHP_FULL_VERSION="$(awk -F= '$1 == "PHP_VERSION" {print $2; exit}' "$RELEASE_ENV")"; \
+    PHP_SHA256="$(awk -F= '$1 == "PHP_SHA256" {print $2; exit}' "$RELEASE_ENV")"; \
+    printf '%s' "$PHP_FULL_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; \
+    printf '%s' "$PHP_SHA256" | grep -Eq '^[0-9a-f]{64}$'; \
     mkdir -p /usr/src/php /etc/php/${PHP_MINOR}/fpm/conf.d /etc/php/${PHP_MINOR}/fpm/pool.d; \
-    curl -fsSL "https://www.php.net/distributions/php-${PHP_VERSION}.tar.xz" -o /tmp/php.tar.xz; \
+    curl -fsSL "https://www.php.net/distributions/php-${PHP_FULL_VERSION}.tar.xz" -o /tmp/php.tar.xz; \
     echo "${PHP_SHA256}  /tmp/php.tar.xz" | sha256sum -c -; \
     tar -xf /tmp/php.tar.xz -C /usr/src/php --strip-components=1; \
     rm -f /tmp/php.tar.xz; \
@@ -72,6 +76,7 @@ RUN set -eux; \
         --with-zlib; \
     make -j"$(nproc)"; \
     make install-fpm; \
+    strip --strip-unneeded /usr/local/sbin/php-fpm 2>/dev/null || true; \
     cp php.ini-production /etc/php/${PHP_MINOR}/fpm/php.ini; \
     cp /etc/php/${PHP_MINOR}/fpm/php-fpm.conf.default /etc/php/${PHP_MINOR}/fpm/php-fpm.conf; \
     sed -i "s|;pid = run/php-fpm.pid|pid = /run/php/php${PHP_MINOR}-fpm.pid|g" /etc/php/${PHP_MINOR}/fpm/php-fpm.conf; \
@@ -95,18 +100,17 @@ RUN ln -sf /usr/local/sbin/php-fpm /usr/sbin/php-fpm${PHP_VERSION} && \
     ln -sf /usr/sbin/php-fpm${PHP_VERSION} /usr/bin/php-fpm
 RUN mkdir -p /run/php
 
-# FPM Socket Settings
-RUN sed -i 's/\(listen = *\)[^ ]*/\1[::]:9000/g' /etc/php/${PHP_VERSION}/fpm/pool.d/www.conf
-RUN sed -i 's/;clear_env = no/clear_env = no/g' /etc/php/${PHP_VERSION}/fpm/pool.d/www.conf
+# FPM Socket & Security Settings
+RUN sed -i 's/\(listen = *\)[^ ]*/\1[::]:9000/g' /etc/php/${PHP_VERSION}/fpm/pool.d/www.conf && \
+    sed -i 's/;clear_env = no/clear_env = no/g' /etc/php/${PHP_VERSION}/fpm/pool.d/www.conf && \
+    sed -i 's/^;security\.limit_extensions = .*/security.limit_extensions = .php/' /etc/php/${PHP_VERSION}/fpm/pool.d/www.conf
 
-# Enable PHP Logs
-RUN echo "error_log = /dev/stderr" >> /etc/php/${PHP_VERSION}/fpm/php.ini
-
-# Disable session upload progress
-RUN echo "session.upload_progress.enabled = 0" >> /etc/php/${PHP_VERSION}/fpm/php.ini
-
-# Disable fatal error backtraces
-RUN echo "fatal_error_backtraces = 0" >> /etc/php/${PHP_VERSION}/fpm/php.ini
+# PHP Security & Logging Defaults
+RUN sed -i 's/^expose_php = .*/expose_php = Off/' /etc/php/${PHP_VERSION}/fpm/php.ini && \
+    sed -i 's/^;cgi\.fix_pathinfo=.*/cgi.fix_pathinfo=0/' /etc/php/${PHP_VERSION}/fpm/php.ini && \
+    echo "error_log = /dev/stderr" >> /etc/php/${PHP_VERSION}/fpm/php.ini && \
+    echo "session.upload_progress.enabled = 0" >> /etc/php/${PHP_VERSION}/fpm/php.ini && \
+    echo "fatal_error_backtraces = 0" >> /etc/php/${PHP_VERSION}/fpm/php.ini
 
 # Enable FPM Logs
 RUN sed -i 's|;\?\(error_log =\).*|\1 /dev/stderr|g' /etc/php/${PHP_VERSION}/fpm/php-fpm.conf

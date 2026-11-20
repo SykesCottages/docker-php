@@ -1,6 +1,21 @@
 #!/bin/sh
 set -e
 
+# Optional: restrict FastCGI clients via FPM_ALLOWED_CLIENTS (e.g. "127.0.0.1" or "127.0.0.1,10.0.0.5")
+if [ -n "${FPM_ALLOWED_CLIENTS:-}" ]; then
+	case "$FPM_ALLOWED_CLIENTS" in
+		*[!0-9a-fA-F:.,\ ]*)
+			echo "Error: Invalid FPM_ALLOWED_CLIENTS value." >&2
+			exit 1
+			;;
+	esac
+	PHP_MAJOR_MINOR="$(php -r 'echo PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION;')"
+	WWW_CONF="/etc/php/${PHP_MAJOR_MINOR}/fpm/pool.d/www.conf"
+	if [ -w "$WWW_CONF" ]; then
+		sed -i "s|^;\?listen\.allowed_clients =.*|listen.allowed_clients = ${FPM_ALLOWED_CLIENTS}|" "$WWW_CONF"
+	fi
+fi
+
 # first arg is `-f` or `--some-option`
 if [ "${1#-}" != "$1" ]; then
 	set -- php-fpm "$@"

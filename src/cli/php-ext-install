@@ -116,6 +116,24 @@ if [ -z "$EXTS" ]; then
     usage
 fi
 
+if [ -n "$PRIORITY" ]; then
+    case "$PRIORITY" in
+        *[!0-9]*)
+            echo "Error: Invalid --priority '${PRIORITY}' (must be digits only)." >&2
+            exit 1
+            ;;
+    esac
+fi
+
+if [ "$SAPI_FILTER" != "ALL" ]; then
+    case "$SAPI_FILTER" in
+        ''|*[!a-zA-Z0-9_-]*)
+            echo "Error: Invalid SAPI '${SAPI_FILTER}'." >&2
+            exit 1
+            ;;
+    esac
+fi
+
 EXT_DIR="$(php-config --extension-dir)"
 SRC_TMP=""
 APT_UPDATED=0
@@ -196,8 +214,20 @@ validate_and_install_deps() {
     missing_runtime=""
 
     for spec in $EXTS; do
+        case "$spec" in
+            *..*|*[\;\|\&\`\$\(\)\{\}\<\>\*\?\[]*)
+                echo "Error: Invalid extension specification '${spec}'." >&2
+                exit 1
+                ;;
+        esac
         mod_name="${spec%%-*}"
         mod_name="${mod_name##*/}"
+        case "$mod_name" in
+            ''|*[!a-zA-Z0-9_]*)
+                echo "Error: Invalid extension name '${mod_name}'." >&2
+                exit 1
+                ;;
+        esac
         mfile="$(manifest_path "$mod_name")"
 
         if [ -f "$mfile" ]; then
@@ -271,18 +301,23 @@ ensure_php_source() {
         return
     fi
 
-    if [ -f "$RELEASE_ENV" ]; then
-        . "$RELEASE_ENV"
-    else
-        PHP_VERSION="$(php -r 'echo PHP_VERSION;')"
-        PHP_SHA256=""
+    if [ ! -f "$RELEASE_ENV" ]; then
+        echo "Error: Missing ${RELEASE_ENV}; cannot verify PHP source integrity." >&2
+        exit 1
+    fi
+
+    PHP_VERSION="$(awk -F= '$1 == "PHP_VERSION" {print $2; exit}' "$RELEASE_ENV")"
+    PHP_SHA256="$(awk -F= '$1 == "PHP_SHA256" {print $2; exit}' "$RELEASE_ENV")"
+
+    if ! printf '%s' "$PHP_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' || \
+       ! printf '%s' "$PHP_SHA256" | grep -Eq '^[0-9a-f]{64}$'; then
+        echo "Error: Invalid or incomplete metadata in ${RELEASE_ENV}." >&2
+        exit 1
     fi
 
     SRC_TMP="$(mktemp -d /tmp/php-src-XXXXXX)"
     curl -fsSL "https://www.php.net/distributions/php-${PHP_VERSION}.tar.xz" -o "${SRC_TMP}/php.tar.xz"
-    if [ -n "${PHP_SHA256:-}" ]; then
-        echo "${PHP_SHA256}  ${SRC_TMP}/php.tar.xz" | sha256sum -c -
-    fi
+    echo "${PHP_SHA256}  ${SRC_TMP}/php.tar.xz" | sha256sum -c -
     tar -xf "${SRC_TMP}/php.tar.xz" -C "$SRC_TMP" --strip-components=1
     rm -f "${SRC_TMP}/php.tar.xz"
 }
@@ -296,6 +331,7 @@ register_ext() {
         exit 1
     fi
 
+    strip --strip-unneeded "$so_path" 2>/dev/null || true
     preserve_runtime_libs "$so_path"
 
     ext_priority="$PRIORITY"
@@ -303,6 +339,12 @@ register_ext() {
         ext_priority="$(read_manifest "$mod_name" priority)"
         ext_priority="${ext_priority:-20}"
     fi
+    case "$ext_priority" in
+        ''|*[!0-9]*)
+            echo "Error: Invalid priority '${ext_priority}' for extension '${mod_name}'." >&2
+            exit 1
+            ;;
+    esac
 
     directive="extension"
     if nm -D "$so_path" 2>/dev/null | grep -q ' zend_extension_entry$'; then

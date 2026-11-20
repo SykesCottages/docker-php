@@ -33,6 +33,12 @@ fi
 
 get_sapis() {
     if [ "$SAPI_FILTER" != "ALL" ]; then
+        case "$SAPI_FILTER" in
+            ''|*[!a-zA-Z0-9_-]*)
+                echo "Error: Invalid SAPI name '${SAPI_FILTER}'." >&2
+                exit 1
+                ;;
+        esac
         if [ ! -d "${CONF_ROOT}/${SAPI_FILTER}/conf.d" ]; then
             echo "Error: SAPI '${SAPI_FILTER}' is not installed." >&2
             exit 1
@@ -51,9 +57,22 @@ SAPIS="$(get_sapis)"
 
 for arg in "$@"; do
     mod="${arg%%/*}"
+    case "$mod" in
+        ''|*[!a-zA-Z0-9_]*)
+            echo "Error: Invalid module name '${mod}'." >&2
+            exit 1
+            ;;
+    esac
+
     override_prio=""
     if [ "$arg" != "$mod" ]; then
         override_prio="${arg#*/}"
+        case "$override_prio" in
+            ''|*[!0-9]*)
+                echo "Error: Invalid priority '${override_prio}' for module '${mod}'." >&2
+                exit 1
+                ;;
+        esac
     fi
 
     ini_file="${MODS_DIR}/${mod}.ini"

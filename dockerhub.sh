@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 ARCH=$(arch)
 
@@ -14,21 +15,29 @@ else
   exit 1
 fi
 
+PIDS=()
 BASE_VERSIONS=($(find . -maxdepth 1 -type d | grep -E '^\./[0-9]+-base' | sort | sed 's/\.\///'))
 for VERSION in "${BASE_VERSIONS[@]}"
 do
-  ./build-base.sh $VERSION $ARCH  >> /dev/null 2>&1 &
+  ./build-base.sh "$VERSION" "$ARCH" >> /dev/null 2>&1 &
+  PIDS+=($!)
 done
 
-wait
+for PID in "${PIDS[@]}"; do
+  wait "$PID"
+done
 
+PIDS=()
 VERSIONS=($(find . -maxdepth 1 -type d | grep -E '^\./[0-9]+\.[0-9]+$' | sort | sed 's/\.\///'))
 while IFS= read -r SRC_VERSION; do
   [ -n "$SRC_VERSION" ] && VERSIONS+=("${SRC_VERSION}-src")
 done < src/versions
 for VERSION in "${VERSIONS[@]}"
 do
-  ./build.sh $VERSION $ARCH >> /dev/null 2>&1 &
+  ./build.sh "$VERSION" "$ARCH" >> /dev/null 2>&1 &
+  PIDS+=($!)
 done
 
-wait
+for PID in "${PIDS[@]}"; do
+  wait "$PID"
+done

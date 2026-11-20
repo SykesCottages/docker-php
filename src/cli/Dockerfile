@@ -35,6 +35,9 @@ RUN set -eux; \
     PHP_FULL_VERSION="$(printf '%s' "$RELEASE_JSON" | jq -er '.version')"; \
     PHP_FILENAME="$(printf '%s' "$RELEASE_JSON" | jq -er '.source[] | select(.filename | endswith(".tar.xz")) | .filename')"; \
     PHP_SHA256="$(printf '%s' "$RELEASE_JSON" | jq -er '.source[] | select(.filename | endswith(".tar.xz")) | .sha256')"; \
+    printf '%s' "$PHP_FULL_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; \
+    printf '%s' "$PHP_FILENAME" | grep -Eq '^php-[0-9]+\.[0-9]+\.[0-9]+\.tar\.xz$'; \
+    printf '%s' "$PHP_SHA256" | grep -Eq '^[0-9a-f]{64}$'; \
     printf 'PHP_VERSION=%s\nPHP_SHA256=%s\n' "$PHP_FULL_VERSION" "$PHP_SHA256" > /etc/php/${PHP_VERSION}/release.env; \
     curl -fsSL "https://www.php.net/distributions/${PHP_FILENAME}" -o /tmp/php.tar.xz; \
     echo "${PHP_SHA256}  /tmp/php.tar.xz" | sha256sum -c -; \
@@ -80,17 +83,26 @@ RUN set -eux; \
     rm -rf /usr/src/php
 
 RUN set -eux; \
+    MPDECIMAL_SHA256="96d33abb4bb0070c7be0fed4246cd38416188325f820468214471938545b1ac8"; \
+    EXT_DECIMAL_COMMIT="8208d89740c48f04673a75f233f4ffaa307322d0"; \
+    EXT_DECIMAL_SHA256="8adbf1e13094dceaca2a502a11d9573f7db55f1da65c5475c711f22958014e58"; \
     mkdir -p /tmp/mpdecimal; \
+    curl -fsSL https://www.bytereef.org/software/mpdecimal/releases/mpdecimal-4.0.1.tar.gz -o /tmp/mpdecimal.tar.gz; \
+    echo "${MPDECIMAL_SHA256}  /tmp/mpdecimal.tar.gz" | sha256sum -c -; \
+    tar -xzf /tmp/mpdecimal.tar.gz -C /tmp/mpdecimal --strip-components=1; \
+    rm -f /tmp/mpdecimal.tar.gz; \
     cd /tmp/mpdecimal; \
-    curl -fsSL https://www.bytereef.org/software/mpdecimal/releases/mpdecimal-4.0.1.tar.gz | tar -xz --strip-components=1; \
     ./configure --prefix=/usr/local; \
     make -j"$(nproc)"; \
     make install; \
     ldconfig; \
     rm -rf /tmp/mpdecimal; \
     mkdir -p /tmp/decimal; \
+    curl -fsSL "https://github.com/php-decimal/ext-decimal/archive/${EXT_DECIMAL_COMMIT}.tar.gz" -o /tmp/decimal.tar.gz; \
+    echo "${EXT_DECIMAL_SHA256}  /tmp/decimal.tar.gz" | sha256sum -c -; \
+    tar -xzf /tmp/decimal.tar.gz -C /tmp/decimal --strip-components=1; \
+    rm -f /tmp/decimal.tar.gz; \
     cd /tmp/decimal; \
-    curl -fsSL https://github.com/php-decimal/ext-decimal/archive/8208d89.tar.gz | tar -xz --strip-components=1; \
     sed -i 's/ZEND_PARSE_PARAMETERS_START_EX(ZEND_PARSE_PARAMS_THROW, min, max)/ZEND_PARSE_PARAMETERS_START(min, max)/g' src/params.h; \
     if grep -q 'zend_ini_long_literal' /usr/local/include/php/Zend/zend_ini.h; then \
         sed -i 's/INI_INT(/zend_ini_long_literal(/g' php_decimal.c; \
@@ -103,6 +115,7 @@ RUN set -eux; \
     pecl channel-update pecl.php.net; \
     yes '' | pecl install opentelemetry protobuf; \
     rm -rf /tmp/pear; \
+    strip --strip-unneeded /usr/local/bin/php "$(php-config --extension-dir)"/*.so 2>/dev/null || true; \
     if [ -f "$(php-config --extension-dir)/opcache.so" ]; then \
         printf '; priority=10\nzend_extension=opcache.so\n' > /etc/php/${PHP_VERSION}/mods-available/opcache.ini; \
     fi; \
@@ -142,7 +155,7 @@ RUN apt-get update -y && \
     apt-get autoclean -y -q && \
     rm -rf /var/lib/apt/lists/*
 
-COPY --from=composer /usr/bin/composer /usr/bin/composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 COPY --from=builder /usr/local/bin/ /usr/local/bin/
 COPY --from=builder /usr/local/include/php/ /usr/local/include/php/
 COPY --from=builder /usr/local/lib/php/ /usr/local/lib/php/
@@ -161,20 +174,17 @@ RUN ldconfig && \
     ln -sf /usr/local/bin/pecl /usr/bin/pecl && \
     ln -sf /usr/local/bin/pear /usr/bin/pear
 
-COPY entrypoint-cli phpenmod phpdismod php-ext-install /usr/local/bin/
+COPY entrypoint-cli phpenmod phpdismod php-ext-install php-ext-cleanup /usr/local/bin/
 COPY manifests/ /usr/local/share/php-ext-install/manifests/
-RUN chmod +x /usr/local/bin/entrypoint-cli /usr/local/bin/phpenmod /usr/local/bin/phpdismod /usr/local/bin/php-ext-install
+RUN chmod +x /usr/local/bin/entrypoint-cli /usr/local/bin/phpenmod /usr/local/bin/phpdismod /usr/local/bin/php-ext-install /usr/local/bin/php-ext-cleanup
 
 RUN if [ -f "/etc/php/${PHP_VERSION}/mods-available/opcache.ini" ]; then phpenmod opcache; fi && \
     phpenmod decimal
 
-# Enable Error Logs
-RUN echo "error_log = /dev/stderr" >> /etc/php/${PHP_VERSION}/cli/php.ini
-
-# Disable session upload progress
-RUN echo "session.upload_progress.enabled = 0" >> /etc/php/${PHP_VERSION}/cli/php.ini
-
-# Disable fatal error backtraces
-RUN echo "fatal_error_backtraces = 0" >> /etc/php/${PHP_VERSION}/cli/php.ini
+# Security & Logging Defaults
+RUN sed -i 's/^expose_php = .*/expose_php = Off/' /etc/php/${PHP_VERSION}/cli/php.ini && \
+    echo "error_log = /dev/stderr" >> /etc/php/${PHP_VERSION}/cli/php.ini && \
+    echo "session.upload_progress.enabled = 0" >> /etc/php/${PHP_VERSION}/cli/php.ini && \
+    echo "fatal_error_backtraces = 0" >> /etc/php/${PHP_VERSION}/cli/php.ini
 
 ENTRYPOINT [ "entrypoint-cli" ]
