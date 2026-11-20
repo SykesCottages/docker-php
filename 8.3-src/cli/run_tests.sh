@@ -5,9 +5,13 @@ PHP_VERSION=8.3
 itShouldCheckThatAllInstalledSoftwareExists() {
     doesCommandExist php
     doesCommandExist composer
+    doesCommandExist curl
+    doesCommandExist lsb_release
     doesCommandExist phpenmod
     doesCommandExist phpdismod
     doesCommandExist php-ext-install
+    doesExecutablePathExist /usr/bin/php
+    doesExecutablePathExist "/usr/bin/php${PHP_VERSION}"
 }
 
 itShouldCheckThatAllPhpModulesExists() {
@@ -30,6 +34,13 @@ itShouldMatchTheDesiredVersionOfPhp() {
 doesCommandExist() {
     if ! [ -x "$(command -v $1)" ]; then
       echo "Error: $1 is not installed." >&2
+      exit 1
+    fi
+}
+
+doesExecutablePathExist() {
+    if ! [ -x "$1" ]; then
+      echo "Error: $1 is not executable." >&2
       exit 1
     fi
 }
@@ -80,9 +91,18 @@ itShouldToggleModulesWithPhpenmodAndPhpdismod() {
   fi
 }
 
+itShouldSetUnlimitedCliMemoryLimit() {
+  php -r 'exit(ini_get("memory_limit") === "-1" ? 0 : 1);'
+  if [ $? -ne 0 ]; then
+    echo "Error: CLI memory_limit is not -1." >&2
+    exit 1
+  fi
+}
+
 itShouldCheckThatAllInstalledSoftwareExists
 itShouldCheckThatAllPhpModulesExists
 itShouldMatchTheDesiredVersionOfPhp
+itShouldSetUnlimitedCliMemoryLimit
 itShouldDisableSessionUploadProgress
 itShouldDisableFatalErrorBacktraces
 itShouldToggleModulesWithPhpenmodAndPhpdismod

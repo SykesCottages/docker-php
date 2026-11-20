@@ -73,6 +73,7 @@ RUN set -eux; \
     make -j"$(nproc)"; \
     make install; \
     cp php.ini-production /etc/php/8.5/cli/php.ini; \
+    sed -i 's/^memory_limit = .*/memory_limit = -1/' /etc/php/8.5/cli/php.ini; \
     rm -rf /usr/src/php
 
 RUN set -eux; \
@@ -93,7 +94,12 @@ RUN set -eux; \
     make -j"$(nproc)"; \
     make install; \
     rm -rf /tmp/decimal; \
-    printf '; priority=30\nextension=decimal.so\n' > /etc/php/8.5/mods-available/decimal.ini
+    pecl channel-update pecl.php.net; \
+    yes '' | pecl install opentelemetry protobuf; \
+    rm -rf /tmp/pear; \
+    printf '; priority=20\nextension=opentelemetry.so\n' > /etc/php/8.5/mods-available/opentelemetry.ini; \
+    printf '; priority=30\nextension=decimal.so\n' > /etc/php/8.5/mods-available/decimal.ini; \
+    printf '; priority=30\nextension=protobuf.so\n' > /etc/php/8.5/mods-available/protobuf.ini
 
 FROM sykescottages/base:ubuntu-24-04-$ARCH
 
@@ -104,6 +110,7 @@ RUN apt-get update -y && \
         autoconf \
         build-essential \
         ca-certificates \
+        curl \
         libargon2-1 \
         libcurl4t64 \
         libffi8 \
@@ -116,7 +123,9 @@ RUN apt-get update -y && \
         libxml2 \
         libxslt1.1 \
         libzip4t64 \
+        lsb-release \
         pkg-config \
+        xz-utils \
         zlib1g && \
     apt-get autoremove -y -q && \
     apt-get autoclean -y -q && \
@@ -129,12 +138,25 @@ COPY --from=builder /usr/local/lib/php/ /usr/local/lib/php/
 COPY --from=builder /usr/local/lib/libmpdec* /usr/local/lib/
 COPY --from=builder /usr/local/php/ /usr/local/php/
 COPY --from=builder /etc/php/8.5/ /etc/php/8.5/
-RUN ldconfig
+RUN ldconfig && \
+    ln -sf /usr/local/bin/php /usr/bin/php && \
+    ln -sf /usr/local/bin/php /usr/bin/php8.5 && \
+    ln -sf /usr/local/bin/phpize /usr/bin/phpize && \
+    ln -sf /usr/local/bin/phpize /usr/bin/phpize8.5 && \
+    ln -sf /usr/local/bin/php-config /usr/bin/php-config && \
+    ln -sf /usr/local/bin/php-config /usr/bin/php-config8.5 && \
+    ln -sf /usr/local/bin/phar /usr/bin/phar && \
+    ln -sf /usr/local/bin/phar /usr/bin/phar8.5 && \
+    ln -sf /usr/local/bin/pecl /usr/bin/pecl && \
+    ln -sf /usr/local/bin/pear /usr/bin/pear
 
 COPY entrypoint-cli phpenmod phpdismod php-ext-install /usr/local/bin/
 RUN chmod +x /usr/local/bin/entrypoint-cli /usr/local/bin/phpenmod /usr/local/bin/phpdismod /usr/local/bin/php-ext-install
 
 RUN phpenmod decimal
+
+# Unlimited CLI memory limit (matches Debian/Sury CLI default)
+RUN sed -i 's/^memory_limit = .*/memory_limit = -1/' /etc/php/8.5/cli/php.ini
 
 # Enable Error Logs
 RUN echo "error_log = /dev/stderr" >> /etc/php/8.5/cli/php.ini
